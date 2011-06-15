@@ -1,4 +1,4 @@
-module excollections;
+module smr.excollections;
 
 import std.functional;
 import core.memory, core.stdc.stdlib, core.stdc.string, std.algorithm;

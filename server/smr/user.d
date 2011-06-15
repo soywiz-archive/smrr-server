@@ -1,8 +1,9 @@
-module user;
+module smr.user;
 
-import excollections;
+import smr.excollections;
+import smr.utils;
+
 import std.string;
-import utils;
 
 class User {
 	static struct Score {

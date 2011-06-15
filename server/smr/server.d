@@ -1,4 +1,4 @@
-module server;
+module smr.server;
 
 import std.socket;
 import std.stream;
@@ -7,8 +7,8 @@ import std.conv;
 import std.process;
 import core.memory;
 
-import user;
-import utils;
+import smr.user;
+import smr.utils;
 
 class SmrClient {
 	bool alive;

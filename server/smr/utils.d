@@ -1,4 +1,4 @@
-module utils;
+module smr.utils;
 
 ubyte[] TA(T)(ref T a) {
 	return cast(ubyte[])((&a)[0..1]);

@@ -1,9 +1,9 @@
-module test;
+module smr.main;
 
-import excollections;
-import utils;
-import user;
-import server;
+import smr.excollections;
+import smr.utils;
+import smr.user;
+import smr.server;
 
 import std.conv;
 import std.stdio;
