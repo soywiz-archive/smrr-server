@@ -69,10 +69,9 @@ class SmrClient {
 	
 	static enum PacketType : ubyte {
 		Ping               = 0,
-		ListItems          = 1,
-		SetUser            = 2,
-		LocateUserPosition = 3,
-		SetUsers           = 4,
+		SetUsers           = 1,
+		LocateUserPosition = 2,
+		ListItems          = 3,
 	}
 	
 	void sendPacket(PacketType packetType, ubyte[] data = []) {
@@ -86,7 +85,7 @@ class SmrClient {
 		//writefln("sendPacket(%d)", packetType);
 	}
 	
-	void handlePacket_SetUser(ubyte[] data) {
+	void handlePacket_SetUsers(ubyte[] data) {
 		struct Request {
 			uint userId;
 			uint scoreIndex;
@@ -109,7 +108,7 @@ class SmrClient {
 			smrServer.userStats.setUserRanking(request.scoreIndex, request.userId, request.scoreTimestamp, request.scoreValue);
 		}
 					
-		sendPacket(PacketType.SetUser, TA(response));
+		sendPacket(PacketType.SetUsers, TA(response));
 	}
 	
 	void handlePacket_LocateUserPosition(ubyte[] data) {
@@ -169,7 +168,7 @@ class SmrClient {
 	}
 	
 	void handlePacket(PacketType packetType, ubyte[] data) {
-		writefln("HandlePacket(%d:%s)", packetType, to!string(packetType));
+		//writefln("HandlePacket(%d:%s)", packetType, to!string(packetType));
 		try {
 			switch (packetType) {
 				case PacketType.Ping:
@@ -180,11 +179,8 @@ class SmrClient {
 					//scope s = new MemoryStream();
 					//s.
 				break;
-				case PacketType.SetUser:
-					handlePacket_SetUser(data);
-				break;
 				case PacketType.SetUsers:
-					handlePacket_SetUser(data);
+					handlePacket_SetUsers(data);
 				break;
 				case PacketType.LocateUserPosition:
 					handlePacket_LocateUserPosition(data);
@@ -198,7 +194,7 @@ class SmrClient {
 			writefln("ERROR: %s", o);
 			this.close();
 		}
-		writefln("HandlePacket(%d:/%s)", packetType, to!string(packetType));
+		//writefln("HandlePacket(%d:/%s)", packetType, to!string(packetType));
 	}
 	
 	void handleData() {

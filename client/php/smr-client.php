@@ -2,10 +2,9 @@
 
 class SmrPacketType {
 	const Ping               = 0;
-	const ListItems          = 1;
-	const SetUser            = 2;
-	const LocateUserPosition = 3;
-	const SetUsers           = 4;
+	const SetUsers           = 1;
+	const LocateUserPosition = 2;
+	const ListItems          = 3;
 	
 	static public function toString($v) {
 		static $lookup;

@@ -6,11 +6,11 @@ $SmrClient = new SmrClient();
 $SmrClient->connect('127.0.0.1', 9777);
 $time = time();
 
-for ($n = 0; $n < 100000; $n++) {
-//for ($n = 0; $n < 1000; $n++) {
+//for ($n = 0; $n < 100000; $n++) {
+for ($n = 0; $n < 1000; $n++) {
 //for ($n = 0; $n < 100; $n++) {
 //for ($n = 0; $n < 20; $n++) {
-	$SmrClient->setUserBuffer(mt_rand(0, 100000), 0, $time + mt_rand(-50, 4), mt_rand(0, 500));
+	$SmrClient->setUserBuffer($n, 0, $time + mt_rand(-50, 4), mt_rand(0, 500));
 }
 
 $SmrClient->setUserBuffer(1000, 0, $time, 200);
@@ -25,10 +25,10 @@ printf("Position(1001):%d\n", $pos_1001 = $SmrClient->locateUserPosition(1001, 0
 print_r($SmrClient->listItems(0, $pos_1001, 3));
 
 printf("Position(0)\n");
-print_r($SmrClient->listItems(0, 0, 3));
+print_r($SmrClient->listItems(0, 0, 4));
 
 printf("Position(9997)\n");
-print_r($SmrClient->listItems(0, 9997, 10));
+print_r($SmrClient->listItems(0, 997, 10));
 //print_r($SmrClient->listItems(0, 20, 20));
 
 

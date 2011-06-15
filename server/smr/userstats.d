@@ -15,7 +15,7 @@ class UserStats {
 	public this() {
 		users        = new UserTreeWithoutStats(&User.compareByUserId);
 		//usersByScore = new UserTreeWithStats(&User.compareByUserId);
-		usersRankings ~= new UserRanking("stats", 0, UserRanking.SortingDirection.Descending, 10_000);
+		usersRankings ~= new UserRanking("stats", 0, UserRanking.SortingDirection.Descending, 1000);
 		//string name, int index, SortingDirection sortingDirection, int maxElementsOnTree
 	}
 	

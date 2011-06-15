@@ -972,6 +972,13 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE, 
         private this(Node b, Node e, CountType rbeginPosition = -1, CountType rendPosition = -1) {
             if (b is null) b = locateNodeAtPosition(rbeginPosition);
             if (e is null) e = locateNodeAtPosition(rendPosition);
+            if (b is null || e is null) {
+            	//b = _end.left;
+            	//e = _end.left;
+            	b = e = _end;
+            	rbeginPosition = -1;
+            	rendPosition = -1;
+            }
             _rbegin = b;
             _rend = e;
             _rbeginPosition = rbeginPosition;
@@ -1674,16 +1681,8 @@ assert(std.algorithm.equal(rbt[], [5]));
 				
 				//writefln("[AA---(%d)]", positionToFind);
 				
-				void checkCurrentNull() {
-					if (current is null) {
-						//_end.leftmost.printTree();
-						_end.printTree();
-						throw(new Exception("Node not found"));
-					}
-				}
-				
 				while (true) {
-					checkCurrentNull();
+					if (current is null) return null;
 					//writefln("%s : %d", current, currentPosition);
 					
 					//CountType currentPositionExpected = getNodePosition(current);
@@ -1692,12 +1691,12 @@ assert(std.algorithm.equal(rbt[], [5]));
 					if (positionToFind < currentPosition) {
 						//currentPosition += current.childCountLeft;
 						current = current.left;
-						checkCurrentNull();
+						if (current is null) return null;
 						//writefln("Left(%s/%s) ::: %d-%d", current.childCountLeft, current.childCountRight, currentPosition, current.childCountRight);
 						currentPosition -= current.childCountRight + 1;
 					} else {
 						current = current.right;
-						checkCurrentNull();
+						if (current is null) return null;
 						//writefln("Right(%s/%s) ::: %d+%d", current.childCountLeft, current.childCountRight, currentPosition, current.childCountLeft);
 						currentPosition += current.childCountLeft + 1;
 					}
