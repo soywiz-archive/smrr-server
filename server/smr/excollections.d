@@ -31,7 +31,7 @@ void swap(T)(ref T a, ref T b) {
  *
  * A Red Black tree should have O(lg(n)) insertion, removal, and search time.
  */
-struct RBNode(V, bool hasStats)
+struct RBNode(V, bool hasStats, CountType = int)
 {
     /*
      * Convenience alias
@@ -43,8 +43,8 @@ struct RBNode(V, bool hasStats)
     public Node _parent;
 	
 	static if (hasStats) {
-		int childCountLeft;
-		int childCountRight;
+		CountType childCountLeft;
+		CountType childCountRight;
 	}
 	
 	Node root() {
@@ -53,20 +53,20 @@ struct RBNode(V, bool hasStats)
 		return it._left;
 	}
 	
-	int debugCountCheck() {
-		int leftCount;
-		int rightCount;
-		if (_left  !is null) leftCount = _left.debugCountCheck();
+	CountType debugCountCheck() {
+		CountType leftCount;
+		CountType rightCount;
+		if (_left  !is null) leftCount  = _left.debugCountCheck();
 		if (_right !is null) rightCount = _right.debugCountCheck();
 		static if (hasStats) {
-			assert (leftCount == childCountLeft);
+			assert (leftCount  == childCountLeft);
 			assert (rightCount == childCountRight);
 		}
 		return 1 + leftCount + rightCount;
 	}
 	
 	static if (hasStats) {
-		void updateCurrentAndAncestors(int countIncrement) {
+		void updateCurrentAndAncestors(CountType countIncrement) {
 			auto prev = &this;
 			auto it = this.parent;
 			while (it) {
@@ -504,8 +504,8 @@ struct RBNode(V, bool hasStats)
             yl = y._left;
             yr = y._right;
             static if (hasStats) {
-            	int y_childCountLeft = y.childCountLeft;
-            	int y_childCountRight = y.childCountRight;
+            	auto y_childCountLeft = y.childCountLeft;
+            	auto y_childCountRight = y.childCountRight;
             }
             auto yc = y.color;
             auto isyleft = y.isLeftNode;
@@ -518,10 +518,11 @@ struct RBNode(V, bool hasStats)
             // need special case so y doesn't point back to itself
             //
             y.left = _left;
-            if(_right is y)
+            if (_right is y) {
                 y.right = &this;
-            else
+            } else {
                 y.right = _right;
+			}
             y.color = color;
             static if (hasStats) {
 	            y.childCountLeft = childCountLeft;
@@ -793,7 +794,7 @@ enum RedBlackOptions {
  * ignored on insertion.  If duplicates are allowed, then new elements are
  * inserted after all existing duplicate elements.
  */
-class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
+class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE, CountType = int)
     //if(is(typeof(binaryFun!less(T.init, T.init))))
 {
     //alias binaryFun!less _less;
@@ -958,17 +959,17 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
     {
         private Node _rbegin;
         private Node _rend;
-		private int  _rbeginPosition;
-		private int  _rendPosition;
+		private CountType _rbeginPosition;
+		private CountType _rendPosition;
 		
-        public int getOffsetPosition(int index) {
+        public CountType getOffsetPosition(CountType index) {
         	if (_rbeginPosition == -1) {
         		return getNodePosition(_rbegin) + index;
         	}
         	return _rbeginPosition + index;
         }
         
-        private this(Node b, Node e, int rbeginPosition = -1, int rendPosition = -1) {
+        private this(Node b, Node e, CountType rbeginPosition = -1, CountType rendPosition = -1) {
             if (b is null) b = locateNodeAtPosition(rbeginPosition);
             if (e is null) e = locateNodeAtPosition(rendPosition);
             _rbegin = b;
@@ -981,7 +982,7 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         	return new Range(_rbegin, _rend, _rbeginPosition, _rendPosition);
         }
         
-        public Range limit(int limitCount) {
+        public Range limit(CountType limitCount) {
         	assert (limitCount >= 0);
         	
         	if (_rbeginPosition != -1 && _rendPosition != -1) {
@@ -994,7 +995,7 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         	return limitUnchecked(limitCount);
         }
         
-        public Range limitUnchecked(int limitCount) {
+        public Range limitUnchecked(CountType limitCount) {
         	assert (limitCount >= 0);
 
         	static if (hasStats) {
@@ -1004,7 +1005,7 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
        			);
         	} else {
 	    		Node current = _rbegin;
-	    		int count = 0;
+	    		CountType count = 0;
 	    		while (true) {
 	    			if (count == limitCount) {
 	    				return new Range(_rbegin, current, getOffsetPosition(0), getOffsetPosition(count));
@@ -1017,11 +1018,11 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         	}
         }
         
-        public Range skip(int skipCount) {
+        public Range skip(CountType skipCount) {
         	return skipUnchecked(skipCount);
         }
         
-        public Range skipUnchecked(int skipCount) {
+        public Range skipUnchecked(CountType skipCount) {
         	static if (hasStats) {
         		return new Range(
         			null, _rend,
@@ -1029,7 +1030,7 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         		);
         	} else {
 	    		Node current = _rbegin;
-	    		int count = 0;
+	    		CountType count = 0;
 	    		while (true) {
 	    			if (count == skipCount) {
 	    				return new Range(current, _rend, getOffsetPosition(count), _rendPosition);
@@ -1076,7 +1077,7 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
             _rbegin = _rbegin.next;
         }
         
-        @property int length() {
+        @property CountType length() {
         	//writefln("Begin: %d:%s", countLesser(_begin), *_begin);
         	//writefln("End: %d:%s", countLesser(_end), *_end);
         	//return _begin
@@ -1092,7 +1093,7 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         		if ((_rend == _end) && (_rbegin == _end.leftmost)) return _length;
         		
         		Node current = _rbegin;
-        		int count = 0;
+        		CountType count = 0;
         		while (current !is _rend) {
         			count++;
         			current = current.next;
@@ -1105,7 +1106,7 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         	return this.clone();
         }
         
-        Range opSlice(int start, int end) {
+        Range opSlice(CountType start, CountType end) {
         	static if (hasStats) {
 	        	return new Range(
 	        		null,
@@ -1118,7 +1119,7 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
 	        }
         }
 
-        Node opIndex(int index) {
+        Node opIndex(CountType index) {
         	static if (hasStats) {
         		return locateNodeAtPosition(getOffsetPosition(index));
         	} else {
@@ -1170,14 +1171,18 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         else
         {
             Node cur = _end.left;
-            while(cur)
+            //writefln("------------- (search:%s)", e);
+            while (cur)
             {
-                if(_less(cur.value, e))
+            	//writefln("%s", *cur);
+                if(_less(cur.value, e)) {
                     cur = cur.right;
-                else if(_less(e, cur.value))
+                } else if(_less(e, cur.value)) {
                     cur = cur.left;
-                else
+                } else {
+                	//writefln("found!");
                     return cur;
+                }
             }
             return null;
         }
@@ -1252,6 +1257,11 @@ class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
     bool opBinaryRight(string op)(Elem e) if (op == "in")
     {
         return _find(e) !is null;
+    }
+    
+    Elem locate(Elem e) {
+    	auto node = _find(e);
+    	return (node !is null) ? node.value : Elem.init;
     }
 
     /**
@@ -1594,14 +1604,14 @@ assert(std.algorithm.equal(rbt[], [5]));
     //auto _equals(Node a, Node b) { return !_less(a, b) && !_less(b, a); }
     //auto _lessOrEquals(Node a, Node b) { return _less(a, b) || _equals(a, b); }
     
-	int countLesser(Node node) {
+	CountType countLesser(Node node) {
 	    static if (hasStats) {
 			if (node is null) return 0;
 			if (node.parent is null) return node.childCountLeft;
 
 			//auto prev = node;
 			auto it = node;
-			int count;
+			CountType count;
 			while (true) {
 				if (it.parent is null) break;
 				//writefln("+%d+1", it.childCountLeft);
@@ -1632,14 +1642,14 @@ assert(std.algorithm.equal(rbt[], [5]));
 	
 	alias countLesser getNodePosition;
 	
-	Node locateNodeAtPosition(int positionToFind) {
+	Node locateNodeAtPosition(CountType positionToFind) {
 		if (positionToFind < 0) throw(new Exception("Negative locateNodeAt"));
 		static if (hasStats) {
 			// log(n) ^^ 2
 			/*static if (false) {
 				Node current = _end;
 				while (true) {
-					int currentPosition = getNodePosition(current);
+					CountType currentPosition = getNodePosition(current);
 					//writefln("currentPosition: %d/%d", currentPosition, positionToFind);
 					
 					if (currentPosition == positionToFind) {
@@ -1660,7 +1670,7 @@ assert(std.algorithm.equal(rbt[], [5]));
 			else*/{
 				//writefln("Root(%s/%s)", _end.childCountLeft, _end.childCountRight);
 				Node current = _end;
-				int currentPosition = _end.childCountLeft;
+				CountType currentPosition = _end.childCountLeft;
 				
 				//writefln("[AA---(%d)]", positionToFind);
 				
@@ -1676,7 +1686,7 @@ assert(std.algorithm.equal(rbt[], [5]));
 					checkCurrentNull();
 					//writefln("%s : %d", current, currentPosition);
 					
-					//int currentPositionExpected = getNodePosition(current);
+					//CountType currentPositionExpected = getNodePosition(current);
 					if (currentPosition == positionToFind) return current;
 					
 					if (positionToFind < currentPosition) {
@@ -1713,7 +1723,7 @@ assert(std.algorithm.equal(rbt[], [5]));
     	return new Range(_end.leftmost, _end, 0, _length);
     }
     
-    int debugCount() {
+    CountType debugCount() {
     	return _end.left.debugCountCheck();
     }
     

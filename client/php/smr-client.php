@@ -37,12 +37,17 @@ class SmrClient {
 	public function __construct() {
 	}
 	
+	public function __destruct() {
+		$this->close();
+	}
+	
 	public function connect($ip, $port) {
 		$this->f = fsockopen($ip, $port);
 		if (!$this->f) throw(new Exception("Can't connect to {$ip}:{$port}"));
 	}
 
 	public function close() {
+		$this->setUserBufferFlush();
 		fclose($this->f);
 		$this->f = null;
 	}
@@ -97,29 +102,13 @@ class SmrClient {
 		if (count($this->setUsers) >= self::MAX_SET_USERS) {
 			$this->setUserBufferFlush();
 		}
-		static $shutdown_callback;
-		if (!isset($shutdown_callback)) {
-			$shutdown_callback = true;
-			register_shutdown_function(array($this, 'setUserBufferFlush'));
-		}
 	}
 	
 	public function setUserBufferFlush() {
 		if (empty($this->setUsers)) return;
 
-		$start = microtime(true);
-		{
-			if (true) {
-				$this->setUsers($this->setUsers);
-			} else {
-				foreach ($this->setUsers as $user) {
-					call_user_func_array(array($this, 'setUser'), $user);
-				}
-			}
-			$this->setUsers = array();
-		}
-		$end = microtime(true);
-		//printf("%.6f\n", $end - $start);
+		$this->setUsers($this->setUsers);
+		$this->setUsers = array();
 	}
 
 	public function locateUserPosition($userId, $scoreIndex) {

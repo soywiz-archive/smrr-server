@@ -19,10 +19,16 @@ $SmrClient->setUserBuffer(1000, 0, $time + 1, 300);
 //$SmrClient->setUserBufferFlush();
 
 printf("Position(1000):%d\n", $pos_1000 = $SmrClient->locateUserPosition(1000, 0));
-printf("Position(1001):%d\n", $pos_1001 = $SmrClient->locateUserPosition(1001, 0));
-
 print_r($SmrClient->listItems(0, $pos_1000, 3));
+
+printf("Position(1001):%d\n", $pos_1001 = $SmrClient->locateUserPosition(1001, 0));
+print_r($SmrClient->listItems(0, $pos_1001, 3));
+
+printf("Position(0)\n");
 print_r($SmrClient->listItems(0, 0, 3));
+
+printf("Position(9997)\n");
+print_r($SmrClient->listItems(0, 9997, 10));
 //print_r($SmrClient->listItems(0, 20, 20));
 
 

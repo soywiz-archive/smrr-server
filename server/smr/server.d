@@ -8,6 +8,7 @@ import std.process;
 import core.memory;
 
 import smr.user;
+import smr.userstats;
 import smr.utils;
 
 class SmrClient {
@@ -104,7 +105,8 @@ class SmrClient {
 
 		for (int n = 0; n < count; n++) {
 			Request  request = (cast(Request *)data.ptr)[n];
-			smrServer.userStats.setUser(User.create(request.userId).setScore(request.scoreValue, request.scoreTimestamp, request.scoreIndex));
+			//smrServer.userStats.setUser(User.create(request.userId).setScore(request.scoreValue, request.scoreTimestamp, request.scoreIndex));
+			smrServer.userStats.setUserRanking(request.scoreIndex, request.userId, request.scoreTimestamp, request.scoreValue);
 		}
 					
 		sendPacket(PacketType.SetUser, TA(response));
@@ -125,7 +127,7 @@ class SmrClient {
 		Request  request = *(cast(Request *)data.ptr);
 		Response response;
 		
-		response.position = smrServer.userStats.locateById(request.userId, request.scoreIndex);
+		response.position = smrServer.userStats.locateById(request.scoreIndex, request.userId);
 		
 		sendPacket(PacketType.LocateUserPosition, TA(response));
 	}
@@ -146,10 +148,13 @@ class SmrClient {
 
 		if (data.length < Request.sizeof) throw(new Exception("Invalid packet size"));
 
+		//writefln("[0]"); stdout.flush();
 		Request  request = *(cast(Request *)data.ptr);
 		scope response = new MemoryStream();
 		int k = request.offset;
-		foreach (User user; smrServer.userStats.usersByScores[request.scoreIndex].all().skip(request.offset).limit(request.count)) {
+		//writefln("[1]"); stdout.flush();
+		foreach (User user; smrServer.userStats.getRankingTree(request.scoreIndex).all().skip(request.offset).limit(request.count)) {
+			//writefln("[2]"); stdout.flush();
 			ResponseEntry responseEntry;
 			responseEntry.userId = user.userId;
 			responseEntry.position = k;
@@ -157,13 +162,14 @@ class SmrClient {
 			responseEntry.timestamp = user.scores[request.scoreIndex].timestamp;
 			response.write(TA(responseEntry));
 			k++;
+			//writefln("[3]"); stdout.flush();
 		}
 		
 		sendPacket(PacketType.ListItems, response.data);
 	}
 	
 	void handlePacket(PacketType packetType, ubyte[] data) {
-		//writefln("HandlePacket(%d:%s)", packetType, to!string(packetType));
+		writefln("HandlePacket(%d:%s)", packetType, to!string(packetType));
 		try {
 			switch (packetType) {
 				case PacketType.Ping:
@@ -240,6 +246,7 @@ class SmrServer : TcpSocket {
 		blocking = false;
 		bind(new InternetAddress(bindIp, bindPort));
 		listen(1024);
+		writefln("Listening at %s:%d", bindIp, bindPort);
 	}
 	
 	void acceptLoop() {
