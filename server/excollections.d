@@ -1,9 +1,9 @@
-module rbtree_with_stats;
+module excollections;
 
 import std.functional;
-import core.memory, core.stdc.stdlib, core.stdc.string, std.algorithm,
-    std.conv, std.exception, std.functional, std.range, std.traits,
-    std.typecons, std.typetuple;
+import core.memory, core.stdc.stdlib, core.stdc.string, std.algorithm;
+import std.conv, std.exception, std.functional, std.range, std.traits;
+import std.typecons, std.typetuple;
 import std.stdio;
 
 //debug = RB_ROTATION;
@@ -793,7 +793,7 @@ enum RedBlackOptions {
  * ignored on insertion.  If duplicates are allowed, then new elements are
  * inserted after all existing duplicate elements.
  */
-class RedBlackTree(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
+class RedBlackTreeEx(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
     //if(is(typeof(binaryFun!less(T.init, T.init))))
 {
     //alias binaryFun!less _less;
@@ -906,22 +906,15 @@ class RedBlackTree(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
             }
         }
 		
-        static if(allowDuplicates)
-        {
+        static if (allowDuplicates) {
 			preInsert();
             result.setColor(_end);
-            version(RBDoChecks)
-                check();
             return result;
-        }
-        else
-        {
-            if(added) {
+        } else {
+            if (added) {
 				preInsert();
                 result.setColor(_end);
 			}
-            version(RBDoChecks)
-                check();
             return Tuple!(bool, "added", Node, "n")(added, result);
         }
     }
@@ -1215,9 +1208,9 @@ class RedBlackTree(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
      *
      * Complexity: $(BIGOH n)
      */
-    @property RedBlackTree dup()
+    @property typeof(this) dup()
     {
-        return new RedBlackTree(_end.dup(), _length);
+        return new typeof(this)(_end.dup(), _length);
     }
 
     /**
@@ -1335,8 +1328,6 @@ class RedBlackTree(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         auto n = _end.leftmost;
         auto result = n.value;
         n.remove(_end);
-        version(RBDoChecks)
-            check();
         return result;
     }
 
@@ -1351,8 +1342,6 @@ class RedBlackTree(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
             --_length;
 		}
         _end.leftmost.remove(_end);
-        version(RBDoChecks)
-            check();
     }
 
     /**
@@ -1365,8 +1354,6 @@ class RedBlackTree(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
         scope(success)
             --_length;
         _end.prev.remove(_end);
-        version(RBDoChecks)
-            check();
     }
 
     /++
@@ -1387,8 +1374,6 @@ class RedBlackTree(T, RedBlackOptions redBlackOptions = RedBlackOptions.NONE)
             b = b.remove(_end);
             --_length;
         }
-        version(RBDoChecks)
-            check();
         return new Range(e, _end);
     }
 
@@ -1549,89 +1534,6 @@ assert(std.algorithm.equal(rbt[], [5]));
             // no sense in doing a full search, no duplicates are allowed,
             // so we just get the next node.
             return new Range(beg, beg.next);
-        }
-    }
-
-    version(RBDoChecks)
-    {
-        /*
-         * Print the tree.  This prints a sideways view of the tree in ASCII form,
-         * with the number of indentations representing the level of the nodes.
-         * It does not print values, only the tree structure and color of nodes.
-         */
-        void printTree(Node n, int indent = 0)
-        {
-            if(n !is null)
-            {
-                printTree(n.right, indent + 2);
-                for(int i = 0; i < indent; i++)
-                    write(".");
-                writeln(n.color == n.color.Black ? "B" : "R");
-                printTree(n.left, indent + 2);
-            }
-            else
-            {
-                for(int i = 0; i < indent; i++)
-                    write(".");
-                writeln("N");
-            }
-            if(indent is 0)
-                writeln();
-        }
-
-        /*
-         * Check the tree for validity.  This is called after every add or remove.
-         * This should only be enabled to debug the implementation of the RB Tree.
-         */
-        void check()
-        {
-            //
-            // check implementation of the tree
-            //
-            int recurse(Node n, string path)
-            {
-                if(n is null)
-                    return 1;
-                if(n.parent.left !is n && n.parent.right !is n)
-                    throw new Exception("Node at path " ~ path ~ " has inconsistent pointers");
-                Node next = n.next;
-                static if(allowDuplicates)
-                {
-                    if(next !is _end && _less(next.value, n.value))
-                        throw new Exception("ordering invalid at path " ~ path);
-                }
-                else
-                {
-                    if(next !is _end && !_less(n.value, next.value))
-                        throw new Exception("ordering invalid at path " ~ path);
-                }
-                if(n.color == n.color.Red)
-                {
-                    if((n.left !is null && n.left.color == n.color.Red) ||
-                            (n.right !is null && n.right.color == n.color.Red))
-                        throw new Exception("Node at path " ~ path ~ " is red with a red child");
-                }
-
-                int l = recurse(n.left, path ~ "L");
-                int r = recurse(n.right, path ~ "R");
-                if(l != r)
-                {
-                    writeln("bad tree at:");
-                    printTree(n);
-                    throw new Exception("Node at path " ~ path ~ " has different number of black nodes on left and right paths");
-                }
-                return l + (n.color == n.color.Black ? 1 : 0);
-            }
-
-            try
-            {
-                recurse(_end.left, "");
-            }
-            catch(Exception e)
-            {
-                printTree(_end.left, 0);
-                throw e;
-            }
         }
     }
 
