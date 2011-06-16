@@ -1,0 +1,459 @@
+<html>
+<head>
+<title>SMR-SERVER API</title>
+<style type="text/css">
+h2 {
+	font: 26px Arial;
+	background: #eee;
+	color: black;
+	padding: 4px 8px;
+}
+
+table.protocol_table {
+	border: 2px solid black;
+}
+
+table.protocol_table td, table.protocol_table th {
+	font: 10px 'Lucida Console';
+	padding: 4px;
+	border: 1px solid black;
+	text-align: left;
+}
+
+table.protocol_table th {
+	font-weight: bold;
+	background: #eee;
+}
+
+table.protocol_table td:nth-child(1) {
+	width: 100px;
+}
+
+table.protocol_table td:nth-child(2) {
+	width: 40px;
+}
+
+table.protocol_table td:nth-child(3) {
+	width: 100px;
+}
+
+div.section {
+	margin-left: 32px;
+}
+
+</style>
+
+</head>
+<body>
+
+<h1>SMR-SERVER - Simple Massive Ranking Server</h1>
+
+<p>
+Very fast and simple server to handle massive rankings. It handles volatile data, so it has to be populated on every start.
+In the future it will have a file memory-mapped to disk.
+</p>
+<p>
+The server itself is very fast because:
+</p>
+<ul>
+	<li>It uses only volatile data without any disk intervention. So if all its data fits in ram, it will be fast as hell.</li>
+	<li>Each operation in the server is performed on O(log()) time.</li>
+	<li>It has an optimized binary protocol for server-client communication.</li>
+	<li>Single threaded with asynchronous sockets. It will be multithreaded for different rankings to avoid locks in the future.</li>
+</ul>
+
+<p>Every message is formed this way:</p>
+<table class="protocol_table request_table">
+	<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+	<tr><td>+00</td><td>u8</td><td>messageId</td><td>Kind of message to send.</td></tr>
+	<tr><td>+01</td><td>u16</td><td>messageLength</td><td>Length of the message to send.</td></tr>
+	<tr><td>+03</td><td>u8 * messageLength</td><td>messageLength</td><td>Raw data of the message to send.</td></tr>
+</table>
+
+<h1>TOC</h1>
+<ol>
+	<li>
+		<a href="#api">API</a>
+		<ol>
+			<li>
+				<a href="#api_misc">Misc</a>
+				<ul>
+					<li><a href="#api_Ping">Ping</a></li>
+					<li><a href="#api_GetVersion">GetVersion</a></li>
+				</ul>
+			</li>
+			<li>
+				<a href="#api_rankings">Rankings</a>
+				<ul>
+					<li><a href="#api_SetRanking">SetRanking</a></li>
+					<li><a href="#api_GetRankingInfo">GetRankingInfo</a></li>
+				</ul>
+			</li>
+			<li>
+				<a href="#api_elements">Elements</a>
+				<ul>
+					<li><a href="#api_SetElements">SetElements</a></li>
+					<li><a href="#api_GetElementOffset">GetElementOffset</a></li>
+					<li><a href="#api_ListElements">ListElements</a></li>
+					<li><a href="#api_RemoveElements">RemoveElements</a></li>
+					<li><a href="#api_RemoveAllElements">RemoveAllElements</a></li>
+				</ul>
+			</li>
+		</ol>
+	</li>
+</ol>
+
+
+<a name="api"></a>
+<h1>API</h1>
+
+<a name="api_misc"></a>
+<h1>API::Misc</h1>
+
+<a name="api_Ping"></a>
+<h2>Ping()</h2>
+<div class="section">
+	<p>Simple call to determine the latency between client and server.</p>
+
+	<h3>Protocol MessageId</h3>
+	<p>0x00</p>
+
+	<h3>Protocol Request</h3>
+	<table class="protocol_table request_table">
+		<tr><td>empty</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<table class="protocol_table response_table">
+		<tr><td>empty</td></tr>
+	</table>
+</div>
+
+<a name="api_GetVersion"></a>
+<h2>GetVersion()</h2>
+<div class="section">
+	<p>Simple call to get the version of the server.</p>
+
+	<h3>Protocol MessageId</h3>
+	<p>0x01</p>
+
+	<h3>Protocol Request</h3>
+	<table class="protocol_table request_table">
+		<tr><td>empty</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<table class="protocol_table response_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>version</td><td>Version of the server. This version 0x00000001.</td></tr>
+	</table>
+</div>
+
+<a name="api_rankings"></a>
+<h1>API::Rankings</h1>
+
+<a name="api_SetRanking"></a>
+<h2>SetRanking(u32 rankingIndex, u32 direction, u32 maxElements)</h2>
+<div class="section">
+	<p>
+		Set the properties of a ranking. If the ranking already exists, it will delete all its items.
+		rankingIndex start at 0 and unused indexes will be allocated anyway.
+	</p>
+	
+	<h3>Protocol MessageId</h3>
+	<p>0x10</p>
+
+	<h3>Protocol Request</h3>
+	<table class="protocol_table request_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to delete the elements from.</td></tr>
+		<tr><td>+04</td><td>u32</td><td>direction</td><td>
+			<ul>
+				<li>00 - Ascending</li>
+				<li>01 - Descending</li>
+			</ul>
+		</td></tr>
+		<tr><td>+08</td><td>s32</td><td>maxElements</td><td>Maximum number of elements that will contain the list. The special value -1 means that it could contain unlimited elements. When reached it will delete automatically elements that have a possition greater than this value.</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<table class="protocol_table response_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>result</td><td>
+			<ul>
+				<li>00 - Success</li>
+				<li>01 - Invalid rankingIndex</li>
+			</ul>
+		</td></tr>
+		<tr><td>+04</td><td>u32</td><td>removedCount</td><td>Number of elements removed after the creation. It will be 0 for new indexes.</td></tr>
+	</table>
+	
+	<h3>Example</h3>
+<pre class="prettyprint">
+$smrClient->setRanking($rankingIndex = 0, $elementId = 1000);
+</pre>
+</div>
+
+<a name="api_GetRankingInfo"></a>
+<h2>GetRankingInfo(u32 rankingIndex)</h2>
+<div class="section">
+	<p>
+		Obtains information related to a ranking;
+	</p>
+	
+	<h3>Protocol MessageId</h3>
+	<p>0x11</p>
+
+	<h3>Protocol Request</h3>
+	<table class="protocol_table request_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to get the information from.</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<table class="protocol_table response_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>result</td><td>
+			<ul>
+				<li>00 - Success</li>
+				<li>01 - Index doesn't exists</li>
+			</ul>
+		</td></tr>
+		<tr><td>+04</td><td>u32</td><td>length</td><td>Number of elements on the ranking.</td></tr>
+		<tr><td>+08</td><td>u32</td><td>direction</td><td>
+			<ul>
+				<li>00 - Ascending</li>
+				<li>01 - Descending</li>
+			</ul>
+		</td></tr>
+		<tr><td>+0C</td><td>u32</td><td>topScore</td><td>The score of the first element in the list. Depending on the direction it will be the lowest value or the higher.</td></tr>
+		<tr><td>+10</td><td>u32</td><td>bottomScore</td><td>The score of the last element in the list. Depending on the direction it will be the lowest value or the higher.</td></tr>
+		<tr><td>+14</td><td>s32</td><td>maxElements</td><td>Maximum number of elements that will contain the list.</td></tr>
+		<tr><td>+18</td><td>u32</td><td>treeHeight</td><td>The height of the tree (the maximum number of passes for logarithmic operations).</td></tr>
+	</table>
+	
+	<h3>Example</h3>
+<pre class="prettyprint">
+$info = $smrClient->getRankingInfo($rankingIndex = 0);
+printf("result      : %d\n", $info['result']);
+printf("length      : %d\n", $info['length']);
+printf("direction   : %d\n", $info['direction']);
+printf("topScore    : %d\n", $info['topScore']);
+printf("bottomScore : %d\n", $info['bottomScore']);
+printf("maxElements : %d\n", $info['maxElements']);
+printf("treeHeight  : %d\n", $info['treeHeight']);
+</pre>
+</div>
+
+<a name="api_elements"></a>
+<h1>API::Elements</h1>
+
+<a name="api_SetElements"></a>
+<h2>SetElements([u32 rankingIndex, u32 elementId, u32 score, u32 timestamp]...)</h2>
+<div class="section">
+	<p>
+		Sets the score and timestamp for a set of elements in the specified rankings.
+		If the elementId is already defined for that ranking, it will be replaced with the new value.
+		<strong>NOTE: Have to be defined if it will allow to replace with older timestamps.</strong>
+	</p>
+	<p>
+		The implementation will buffer requests in order to execute them all in a batch.
+	</p>
+	
+	<h3>Protocol MessageId</h3>
+	<p>0x20</p>
+
+	<h3>Protocol Request</h3>
+	<p>Repeat this structure as many times as scores have to update.</p>
+	<p>Notice. Due to protocol limitations you can update only (2^^16)/16 elements in a single request (4096 elements).</p>
+	<p>That's a desired limitation that tries to avoid too much memory allocation in the client as well as the server.</p>
+	<table class="protocol_table request_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>(16*n)+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to obtain the elements from.</td></tr>
+		<tr><td>(16*n)+04</td><td>u32</td><td>elementId</td><td>Offset of the list to obtain elements from.</td></tr>
+		<tr><td>(16*n)+08</td><td>u32</td><td>score</td><td>Number of elements from the list.</td></tr>
+		<tr><td>(16*n)+0C</td><td>u32</td><td>timestamp</td><td>Number of elements from the list.</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<table class="protocol_table response_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>result</td><td>
+			<ul>
+				<li>00 - Success</li>
+				<li>01 - Some failed due to rankingIndex</li>
+			</ul>
+		</td></tr>
+		<tr><td>+04</td><td>u32</td><td>updated</td><td>Number of elements updated successfully in that request</td></tr>
+	</table>
+	
+	<h3>Example</h3>
+<pre class="prettyprint">
+// This will add 10 elements in the first ranking with incremental ids and with random scores between 0 and 500 obtained at the current time.
+for ($n = 0; $n < 10; $n++) {
+	$smrClient->setElementBuffered($rankingIndex = 0, $elementId = $n, $score = mt_rand(0, 500), $timestamp = time());
+}
+$smrClient->setElementBufferedFlush();
+</pre>
+</div>
+
+<a name="api_GetElementOffset"></a>
+<h2>GetElementOffset(u32 rankingIndex, u32 elementId)</h2>
+<div class="section">
+	<p>
+		Obtains the offset of an element in a ranking.
+	</p>
+	
+	<h3>Protocol MessageId</h3>
+	<p>0x21</p>
+
+	<h3>Protocol Request</h3>
+	<table class="protocol_table request_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to obtain the elements from.</td></tr>
+		<tr><td>+04</td><td>u32</td><td>elementId</td><td>Offset of the list to obtain elements from.</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<table class="protocol_table response_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>offset</td><td>Offset in the ranking for that element.</td></tr>
+	</table>
+	
+	<h3>Example</h3>
+<pre class="prettyprint">
+// Number of elements per page.
+$pageSize = 10;
+
+// Obtains the element offset with elementId=1000 for the first ranking
+$elementOffset = $smrClient->getElementOffset($rankingIndex = 0, $elementId = 1000);
+
+// Obtains a list of elements in the page of that element with at most $pageSize elements.
+$elementsInPage = $smrClient->listElements($rankingIndex = 0, $offset = ($elementOffset - ($elementOffset % $pageSize)), $count = $pageSize);
+</pre>
+</div>
+
+<a name="api_ListElements"></a>
+<h2>ListElements(u32 rankingIndex, u32 offset, u32 count)</h2>
+<div class="section">
+	<p>Obtain a slice of elements from a specified ranking.</p>
+	
+	<h3>Protocol MessageId</h3>
+	<p>0x22</p>
+
+	<h3>Protocol Request</h3>
+	<table class="protocol_table request_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to obtain the elements from.</td></tr>
+		<tr><td>+04</td><td>u32</td><td>offset</td><td>Offset of the list to obtain elements from.</td></tr>
+		<tr><td>+08</td><td>u32</td><td>count</td><td>Number of elements from the list.</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<p>Repeat this structure (message.length / 16) times</p>
+	<table class="protocol_table response_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>(16*n)+00</td><td>u32</td><td>offset</td><td>Offset in the ranking. Should take ascendent values between request.offset and (request.offset + request.count - 1). But could be less if it's out of limits.</td></tr>
+		<tr><td>(16*n)+04</td><td>u32</td><td>elementId</td><td>Id of the element on that response.offset of the requested ranking.</td></tr>
+		<tr><td>(16*n)+08</td><td>s32</td><td>score</td><td>Score of the element on that response.offset of the requested ranking.</td></tr>
+		<tr><td>(16*n)+0C</td><td>u32</td><td>timestamp</td><td>Timestamp of the achieved score of the element on that response.offset of the requested ranking.</td></tr>
+	</table>
+	
+	<h3>Example</h3>
+<pre class="prettyprint">
+// Obtains the first ten elements from the first ranking.
+$list1 = $smrClient->listElements($rankingIndex = 0, $offset = 0, $count = 10);
+
+// Obtains the next twenty elements from the first ranking.
+$list2 = $smrClient->listElements($rankingIndex = 0, $offset = 10, $count = 20);
+
+// Thas would be the same as obtaining 30 elements in the first place.
+$list = array_merge($list1, $list2);
+
+foreach ($list as $element) {
+	printf("%d. "          , $list['offset'] + 1);
+	printf("ElementId(%d) ", $list['elementId']);
+	printf("Score(%d) "    , $list['score']);
+	printf("Timestamp(%d) ", $list['timestamp']);
+	printf("\n");
+}
+</pre>
+</div>
+
+<a name="api_RemoveElements"></a>
+<h2>RemoveElements(u32 rankingIndex, u32 elementId)</h2>
+<div class="section">
+	<p>
+		Removes the selected elements from a list of rankingIndex/elementId pairs.
+	</p>
+	
+	<h3>Protocol MessageId</h3>
+	<p>0x23</p>
+
+	<h3>Protocol Request</h3>
+	<p>Repeat this structure as many times as elements have to delete on rankings.</p>
+	<table class="protocol_table request_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to delete the elements from.</td></tr>
+		<tr><td>+04</td><td>u32</td><td>elementId</td><td>Element to delete from ranking.</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<table class="protocol_table response_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>result</td><td>
+			<ul>
+				<li>00 - Success</li>
+				<li>01 - Invalid rankingIndex</li>
+			</ul>
+		</td></tr>
+		<tr><td>+04</td><td>u32</td><td>count</td><td>Number of elements successfully removed</td></tr>
+	</table>
+	
+	<h3>Example</h3>
+<pre class="prettyprint">
+// Removes elements with ids [1000, 1001 and 1002] from the first ranking.
+$smrClient->removeElement($rankingIndex = 0, $elementId = 1000);
+$smrClient->removeElement($rankingIndex = 0, $elementId = 1001);
+$smrClient->removeElement($rankingIndex = 0, $elementId = 1002);
+$smrClient->removeElementFlush();
+</pre>
+</div>
+
+<a name="api_RemoveAllElements"></a>
+<h2>RemoveAllElements(u32 rankingIndex)</h2>
+<div class="section">
+	<p>
+		Removes all elements from a ranking.
+	</p>
+	
+	<h3>Protocol MessageId</h3>
+	<p>0x24</p>
+
+	<h3>Protocol Request</h3>
+	<table class="protocol_table request_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to delete the elements from.</td></tr>
+	</table>
+
+	<h3>Protocol Response</h3>
+	<table class="protocol_table response_table">
+		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
+		<tr><td>+00</td><td>u32</td><td>result</td><td>
+			<ul>
+				<li>00 - Success</li>
+				<li>01 - Invalid rankingIndex</li>
+			</ul>
+		</td></tr>
+		<tr><td>+04</td><td>u32</td><td>count</td><td>Number of elements removed (the length of the list)</td></tr>
+	</table>
+	
+	<h3>Example</h3>
+<pre class="prettyprint">
+// Removes all elements from the first ranking.
+$smrClient->clearAllElements($rankingIndex = 0);
+</pre>
+</div>
+
+</body>
+</html>

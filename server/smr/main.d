@@ -17,7 +17,5 @@ import std.process;
 import std.stream;
 
 int main(string[] args) {
-	SmrServer.main();
-	
-	return 0;
+	return SmrServer.main(args);
 }

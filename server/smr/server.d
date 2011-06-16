@@ -5,11 +5,20 @@ import std.stream;
 import std.stdio;
 import std.conv;
 import std.process;
+import std.getopt;
 import core.memory;
 
 import smr.user;
 import smr.userstats;
 import smr.utils;
+
+const string SMR_VERSION = "0.1-beta";
+
+class TerminateException : Exception {
+	this(string msg = "", string file = __FILE__, size_t line = __LINE__, Throwable next = null) {
+		super(msg, file, line, next);
+	}
+}
 
 class SmrClient {
 	bool alive;
@@ -236,6 +245,10 @@ class SmrClient {
 class SmrServer : TcpSocket {
 	SmrClient[Socket] clients;
 	UserStats userStats;
+	
+	this(Config config) {
+		this(config.bindIp, config.bindPort);
+	}
 
 	this(string bindIp = "127.0.0.1", ushort bindPort = 9777) {
 		userStats = new UserStats();
@@ -306,10 +319,61 @@ class SmrServer : TcpSocket {
 		}
 	}
 	
-	static void main() {
-		system(std.string.format("taskkill /F /IM rbtree_with_stats.exe /FI \"PID ne %d\" > NUL 2> NUL", std.process.getpid));
-		
-		SmrServer socketServer = new SmrServer();
-		socketServer.acceptLoop();
+	struct Config {
+		string bindIp = "127.0.0.1";
+		ushort bindPort = 9777;
+	}
+	
+	static int main(string[] args) {
+		try {
+			Config config;
+			
+			system(std.string.format("taskkill /F /IM smr-server.exe /FI \"PID ne %d\" > NUL 2> NUL", std.process.getpid));
+			
+			void showHelp() {
+				writefln("smr-server %s - Simple Massive Ranking Server", SMR_VERSION);
+				writefln("Copyright (c) 2011 by Carlos Ballesteros Velasco");
+				writefln("http://code.google.com/p/smr-server/");
+				writefln("");
+				writefln("Usage:");
+				writefln("  smr-server <switches>");
+				writefln("");
+				writefln("  --help            - Shows this help");
+				writefln("  --version         - Shows the version of the program");
+				writefln("  --bind_ip=X.X.X.X - Sets the interface to listen to");
+				writefln("  --bind_port=XXXX  - Sets the port to listen to");
+				writefln("");
+				writefln("Examples:");
+				writefln("");
+				writefln("  smr-server --help");
+				writefln("  smr-server --version");
+				writefln("  smr-server --bind_ip=196.168.1.100 --bind_port=80");
+				
+				throw(new TerminateException);
+			}
+			
+			void showVersion() {
+				writefln("%s", SMR_VERSION);
+				
+				throw(new TerminateException);
+			}
+			
+			getopt(args,
+				"bind_ip"  , &config.bindIp,
+				"bind_port", &config.bindPort,
+				"version"  , &showVersion,
+				"help"     , &showHelp
+			);
+			
+			SmrServer socketServer = new SmrServer(config);
+			socketServer.acceptLoop();
+			
+			return 0;
+		} catch (TerminateException) {
+			return -1;
+		} catch (Throwable o) {
+			writefln("ERROR: %s", o);
+			return -1;
+		}
 	}
 }
