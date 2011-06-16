@@ -8,14 +8,37 @@ import std.stdio;
 
 class UserStats {
 	public UserTreeWithoutStats    users;
-	public UserRanking[]           usersRankings;
+	private UserRanking[]           usersRankings;
 	//public UserTreeWithStats[]     usersByScores;
 	//public int[string]             rankingsByName;
+	
+	bool isValidRankingIndexToCreate(int rankingIndex) {
+		return (rankingIndex >= 0 && rankingIndex < 0x1000);
+	}
+	
+	bool isValidRankingIndex(int rankingIndex) {
+		return (rankingIndex >= 0 && rankingIndex < usersRankings.length);
+	}
+	
+	public UserRanking getRanking(int rankingIndex) {
+		while (usersRankings.length <= rankingIndex) {
+			usersRankings ~= new UserRanking(usersRankings.length, UserRanking.SortingDirection.Descending, UserRanking.NO_LIMIT_ELEMENTS);
+		}
+		return usersRankings[rankingIndex];
+	}
+	
+	public int setRanking(int rankingIndex, UserRanking.SortingDirection direction, int maxElements) {
+		UserRanking ranking = getRanking(rankingIndex);
+		int oldLength = ranking.sortedTree.length;
+		delete ranking;
+		usersRankings[rankingIndex] = new UserRanking(rankingIndex, direction, maxElements);
+		return oldLength;
+	}
 	
 	public this() {
 		users        = new UserTreeWithoutStats(&User.compareByUserId);
 		//usersByScore = new UserTreeWithStats(&User.compareByUserId);
-		usersRankings ~= new UserRanking("stats", 0, UserRanking.SortingDirection.Descending, 1000);
+		usersRankings ~= new UserRanking(0, UserRanking.SortingDirection.Descending, UserRanking.NO_LIMIT_ELEMENTS);
 		//string name, int index, SortingDirection sortingDirection, int maxElementsOnTree
 	}
 	
@@ -44,22 +67,22 @@ class UserStats {
 	/**
 	 * 
 	 */
-	public void setUserRanking(int index, int userId, uint timestamp, uint score) {
-		scope tempUser = new User(userId);
+	public void setUserRanking(int rankingIndex, int elementId, uint score, uint timestamp) {
+		scope tempUser = new User(elementId);
 		auto oldUserNode = users._find(tempUser);
 		auto oldUser = (oldUserNode !is null) ? oldUserNode.value : null;
 		User newUser;
 		
 		if (oldUser !is null) {
-			usersRankings[index].removeUser(oldUser);
+			usersRankings[rankingIndex].removeUser(oldUser);
 			newUser = oldUser;
 		} else {
-			newUser = new User(userId);
+			newUser = new User(elementId);
 			users.insert(newUser);
 		}
 
-		newUser.setScore(score, timestamp, index);
+		newUser.setScore(score, timestamp, rankingIndex);
 		
-		usersRankings[index].addUser(newUser);
+		usersRankings[rankingIndex].addUser(newUser);
 	}
 }

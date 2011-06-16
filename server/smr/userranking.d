@@ -1,11 +1,12 @@
 module smr.userranking;
 
 import smr.user;
+import smr.utils;
 
 import std.stdio;
 
 class UserRanking {
-	enum SortingDirection {
+	public enum SortingDirection : int {
 		Ascending  = +1,
 		Descending = -1,
 	}
@@ -15,7 +16,7 @@ class UserRanking {
 	/**
 	 * Name of the ranking.
 	 */
-	public string name;
+	//public string name;
 	
 	/**
 	 * Index of the ranking.
@@ -36,11 +37,14 @@ class UserRanking {
 	
 	public bool compareUsersByRanking(User a, User b) {
 		int result;
-		if (sortingDirection == SortingDirection.Ascending) {
-			result = User.Score.compare(a.scores[index], b.scores[index]);
-		} else {
-			result = User.Score.compare(b.scores[index], a.scores[index]);
+		scope a_score = a.getScore(index);
+		scope b_score = b.getScore(index);
+
+		if (sortingDirection != SortingDirection.Ascending) {
+			swap(a_score, b_score);
 		}
+
+		result = User.Score.compare(a_score, b_score);
 		if (result == 0) {
 			result = b.userId - a.userId;
 		}
@@ -89,8 +93,8 @@ class UserRanking {
 	}
 	*/
 	
-	public this(string name, int index, SortingDirection sortingDirection, int maxElementsOnTree = NO_LIMIT_ELEMENTS) {
-		this.name  = name;
+	public this(/*string name, */int index, SortingDirection sortingDirection, int maxElementsOnTree = NO_LIMIT_ELEMENTS) {
+		//this.name  = name;
 		this.index = index;
 		this.sortingDirection = sortingDirection;
 		this.maxElementsOnTree = maxElementsOnTree;

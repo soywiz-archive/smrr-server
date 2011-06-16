@@ -153,7 +153,7 @@ The server itself is very fast because:
 <h1>API::Rankings</h1>
 
 <a name="api_SetRanking"></a>
-<h2>SetRanking(u32 rankingIndex, u32 direction, u32 maxElements)</h2>
+<h2>SetRanking(u32 rankingIndex, s32 direction, s32 maxElements)</h2>
 <div class="section">
 	<p>
 		Set the properties of a ranking. If the ranking already exists, it will delete all its items.
@@ -167,10 +167,10 @@ The server itself is very fast because:
 	<table class="protocol_table request_table">
 		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
 		<tr><td>+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to delete the elements from.</td></tr>
-		<tr><td>+04</td><td>u32</td><td>direction</td><td>
+		<tr><td>+04</td><td>s32</td><td>direction</td><td>
 			<ul>
-				<li>00 - Ascending</li>
-				<li>01 - Descending</li>
+				<li>+1 - Ascending</li>
+				<li>-1 - Descending</li>
 			</ul>
 		</td></tr>
 		<tr><td>+08</td><td>s32</td><td>maxElements</td><td>Maximum number of elements that will contain the list. The special value -1 means that it could contain unlimited elements. When reached it will delete automatically elements that have a possition greater than this value.</td></tr>

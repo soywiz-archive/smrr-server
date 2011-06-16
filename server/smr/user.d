@@ -27,22 +27,26 @@ class User {
 	} 
 
 	uint userId;
-	Score[] scores;
+	private Score[] _scores;
 	
 	static User create(uint userId) {
 		return new User(userId);
 	}
 	
+	ref Score getScore(uint rankingIndex) {
+		if (_scores.length < rankingIndex + 1) _scores.length = rankingIndex + 1;
+		return _scores[rankingIndex];
+	}
+	
 	User setScore(uint score, uint timestamp, uint index = 0) {
-		if (scores.length < index + 1) scores.length = index + 1;
-		scores[index].timestamp = timestamp;
-		scores[index].score = score;
+		getScore(index).timestamp = timestamp;
+		getScore(index).score = score;
 		return this;
 	}
 	
 	User clone() {
 		User user = new User(this.userId);
-		user.scores = this.scores.dup;
+		user._scores = this._scores.dup;
 		return user;
 	}
 	
@@ -58,7 +62,7 @@ class User {
 	*/
 	
 	~this() {
-		delete scores;
+		delete _scores;
 	}
 	
 	/*
@@ -114,6 +118,6 @@ class User {
 	*/
 	
 	public string toString() {
-		return std.string.format("User(userId:%d, %s)", userId, scores);
+		return std.string.format("User(userId:%d, %s)", userId, _scores);
 	}
 }

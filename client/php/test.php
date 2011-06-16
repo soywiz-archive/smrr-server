@@ -6,29 +6,36 @@ $SmrClient = new SmrClient();
 $SmrClient->connect('127.0.0.1', 9777);
 $time = time();
 
+//$SmrClient->removeAllElements(0);
+
+printf("Version: %d\n", $SmrClient->getVersion());
+print_r($SmrClient->getRankingInfo(0));
+
+//var_dump($SmrClient->setRanking(0, SmrClientDirection::Ascending, 10000000));
+
 //for ($n = 0; $n < 100000; $n++) {
 for ($n = 0; $n < 1000; $n++) {
 //for ($n = 0; $n < 100; $n++) {
 //for ($n = 0; $n < 20; $n++) {
-	$SmrClient->setUserBuffer($n, 0, $time + mt_rand(-50, 4), mt_rand(0, 500));
+	$SmrClient->setElementBuffer(0, $n, mt_rand(0, 500), $time + mt_rand(-50, 4));
 }
 
-$SmrClient->setUserBuffer(1000, 0, $time, 200);
-$SmrClient->setUserBuffer(1001, 0, $time, 300);
-$SmrClient->setUserBuffer(1000, 0, $time + 1, 300);
-//$SmrClient->setUserBufferFlush();
+$SmrClient->setElementBuffer(0, 1000, 200, $time);
+$SmrClient->setElementBuffer(0, 1001, 300, $time);
+$SmrClient->setElementBuffer(0, 1000, 300, $time + 1);
+//$SmrClient->setElementBufferFlush();
 
-printf("Position(1000):%d\n", $pos_1000 = $SmrClient->locateUserPosition(1000, 0));
-print_r($SmrClient->listItems(0, $pos_1000, 3));
+printf("Position(1000):%d\n", $pos_1000 = $SmrClient->getElementOffset(0, 1000));
+print_r($SmrClient->listElements(0, $pos_1000, 3));
 
-printf("Position(1001):%d\n", $pos_1001 = $SmrClient->locateUserPosition(1001, 0));
-print_r($SmrClient->listItems(0, $pos_1001, 3));
+printf("Position(1001):%d\n", $pos_1001 = $SmrClient->getElementOffset(0, 1001));
+print_r($SmrClient->listElements(0, $pos_1001, 3));
 
 printf("Position(0)\n");
-print_r($SmrClient->listItems(0, 0, 4));
+print_r($SmrClient->listElements(0, 0, 4));
 
 printf("Position(9997)\n");
-print_r($SmrClient->listItems(0, 997, 10));
+print_r($SmrClient->listElements(0, 997, 10));
 //print_r($SmrClient->listItems(0, 20, 20));
 
 

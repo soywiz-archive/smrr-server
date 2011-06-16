@@ -10,6 +10,7 @@ import core.memory;
 
 import smr.user;
 import smr.userstats;
+import smr.userranking;
 import smr.utils;
 
 const string SMR_VERSION = "0.1-beta";
@@ -42,8 +43,7 @@ class SmrClient {
 	}
 	
 	bool receive() {
-		scope ubyte[] temp = new ubyte[1024];
-		//writefln("%s %s", socket, this);
+		scope temp = new ubyte[1024];
 		
 		int totalReceivedLength = socket.receive(temp);
 		if (totalReceivedLength <= 0) {
@@ -53,20 +53,6 @@ class SmrClient {
 		data ~= temp[0..totalReceivedLength];
 		handleData();
 		
-		/*
-		int totalReceivedLength = 0;
-		while (true) {
-			int receivedLength = socket.receive(temp);
-			totalReceivedLength += receivedLength;
-			if (receivedLength <= 0) {
-				break;
-			}
-			data ~= temp[0..receivedLength];
-		}
-		handleData();
-		*/
-		//writefln("LEN: %d", data.length);
-		//return (totalReceivedLength > 0);
 		return true;
 	}
 	
@@ -77,10 +63,25 @@ class SmrClient {
 	}
 	
 	static enum PacketType : ubyte {
-		Ping               = 0,
-		SetUsers           = 1,
-		LocateUserPosition = 2,
-		ListItems          = 3,
+		////////////////////////////////
+		/// Misc ///////////////////////
+		////////////////////////////////
+		Ping               = 0x00,
+		GetVersion         = 0x01,
+		////////////////////////////////
+		/// Rankings ///////////////////
+		////////////////////////////////
+		SetRanking         = 0x10,
+		GetRankingInfo     = 0x11,
+		////////////////////////////////
+		/// Elements ///////////////////
+		////////////////////////////////
+		SetElements        = 0x20,
+		GetElementOffset   = 0x21,
+		ListElements       = 0x22,
+		RemoveElements     = 0x23,
+		RemoveAllElements  = 0x24,
+		////////////////////////////////
 	}
 	
 	void sendPacket(PacketType packetType, ubyte[] data = []) {
@@ -94,12 +95,12 @@ class SmrClient {
 		//writefln("sendPacket(%d)", packetType);
 	}
 	
-	void handlePacket_SetUsers(ubyte[] data) {
+	void handlePacket_SetElements(ubyte[] data) {
 		struct Request {
-			uint userId;
-			uint scoreIndex;
-			int scoreTimestamp;
-			int scoreValue;
+			uint rankingIndex;
+			uint elementId;
+			int score;
+			int timestamp;
 		}
 		
 		struct Response {
@@ -113,21 +114,20 @@ class SmrClient {
 
 		for (int n = 0; n < count; n++) {
 			Request  request = (cast(Request *)data.ptr)[n];
-			//smrServer.userStats.setUser(User.create(request.userId).setScore(request.scoreValue, request.scoreTimestamp, request.scoreIndex));
-			smrServer.userStats.setUserRanking(request.scoreIndex, request.userId, request.scoreTimestamp, request.scoreValue);
+			smrServer.userStats.setUserRanking(request.rankingIndex, request.elementId, request.score, request.timestamp);
 		}
 					
-		sendPacket(PacketType.SetUsers, TA(response));
+		sendPacket(PacketType.SetElements, TA(response));
 	}
 	
-	void handlePacket_LocateUserPosition(ubyte[] data) {
+	void handlePacket_GetElementOffset(ubyte[] data) {
 		struct Request {
-			uint userId;
-			uint scoreIndex;
+			uint rankingIndex;
+			uint elementId;
 		}
 		
 		struct Response {
-			uint position;
+			int position;
 		}
 		
 		if (data.length < Request.sizeof) throw(new Exception("Invalid packet size"));
@@ -135,14 +135,17 @@ class SmrClient {
 		Request  request = *(cast(Request *)data.ptr);
 		Response response;
 		
-		response.position = smrServer.userStats.locateById(request.scoreIndex, request.userId);
-		
-		sendPacket(PacketType.LocateUserPosition, TA(response));
+		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex)) {
+			response.position = smrServer.userStats.locateById(request.rankingIndex, request.elementId);
+		} else {
+			response.position = -1;
+		}
+		sendPacket(PacketType.GetElementOffset, TA(response));
 	}
 	
-	void handlePacket_ListItems(ubyte[] data) {
+	void handlePacket_ListElements(ubyte[] data) {
 		struct Request {
-			uint scoreIndex;
+			uint rankingIndex;
 			uint offset;
 			uint count;
 		}
@@ -154,46 +157,158 @@ class SmrClient {
 			uint timestamp;
 		}
 
-		if (data.length < Request.sizeof) throw(new Exception("Invalid packet size"));
+		scope Request request = FA2!Request(data);
+		
+		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex)) {
+			//writefln("[0]"); stdout.flush();
+			scope response = new MemoryStream();
+			int k = request.offset;
+			//writefln("[1]"); stdout.flush();
+			foreach (User user; smrServer.userStats.getRankingTree(request.rankingIndex).all().skip(request.offset).limit(request.count)) {
+				//writefln("[2]"); stdout.flush();
+				ResponseEntry responseEntry;
+				responseEntry.userId = user.userId;
+				responseEntry.position = k;
+				responseEntry.score = user.getScore(request.rankingIndex).score;
+				responseEntry.timestamp = user.getScore(request.rankingIndex).timestamp;
+				response.write(TA(responseEntry));
+				k++;
+				//writefln("[3]"); stdout.flush();
+			}
+			
+			sendPacket(PacketType.ListElements, response.data);
+		} else {
+			sendPacket(PacketType.ListElements, []);
+		}
+	}
+	
+	void handlePacket_Ping(ubyte[] data) {
+		sendPacket(PacketType.Ping, []);
+	}
+	
+	void handlePacket_GetVersion(ubyte[] data) {
+		struct Response {
+			uint _version;
+		}
+		Response response;
+		response._version = 0x00000001;
+		sendPacket(PacketType.GetVersion, TA(response));
+	}
 
-		//writefln("[0]"); stdout.flush();
-		Request  request = *(cast(Request *)data.ptr);
-		scope response = new MemoryStream();
-		int k = request.offset;
-		//writefln("[1]"); stdout.flush();
-		foreach (User user; smrServer.userStats.getRankingTree(request.scoreIndex).all().skip(request.offset).limit(request.count)) {
-			//writefln("[2]"); stdout.flush();
-			ResponseEntry responseEntry;
-			responseEntry.userId = user.userId;
-			responseEntry.position = k;
-			responseEntry.score = user.scores[request.scoreIndex].score;
-			responseEntry.timestamp = user.scores[request.scoreIndex].timestamp;
-			response.write(TA(responseEntry));
-			k++;
-			//writefln("[3]"); stdout.flush();
+	void handlePacket_SetRanking(ubyte[] data) {
+		struct Request {
+			int                          rankingIndex;
+			UserRanking.SortingDirection direction;
+			int                          maxElements;
+		}
+
+		struct Response {
+			uint result;
+			uint removedCount;
 		}
 		
-		sendPacket(PacketType.ListItems, response.data);
+		scope Request request = FA2!Request(data);
+		Response response;
+		
+		if (smrServer.userStats.isValidRankingIndexToCreate(request.rankingIndex)) {
+			response.result = 0x00;
+			response.removedCount = smrServer.userStats.setRanking(request.rankingIndex, request.direction, request.maxElements);
+		} else {
+			response.result = 0x01;
+			response.removedCount = 0;
+		}
+		
+		sendPacket(PacketType.SetRanking, TA(response));
+	}
+
+	void handlePacket_GetRankingInfo(ubyte[] data) {
+		struct Request {
+			int rankingIndex;
+		}
+
+		struct Response {
+			uint result;
+			uint length;
+			UserRanking.SortingDirection direction;
+			uint topScore;
+			uint bottomScore;
+			int  maxElements;
+			uint treeHeight;
+		}
+		
+		scope Request request = FA2!Request(data);
+		Response response;
+		
+		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex)) {
+			UserRanking ranking = smrServer.userStats.getRanking(request.rankingIndex);
+			auto rankingTree = ranking.sortedTree;
+			response.result = 0x00;
+			response.length =  rankingTree.length;
+			response.direction = ranking.sortingDirection;
+			if (response.length == 0) {
+				response.topScore  = 0;
+				response.bottomScore  = 0;
+			} else {
+				//response.topScore     = rankingTree._end.leftmost.value.getScore(request.rankingIndex).score;
+				//response.bottomScore  = rankingTree._end.rightmost.value.getScore(request.rankingIndex).score;
+				response.topScore     = rankingTree.locateNodeAtPosition(0).value.getScore(request.rankingIndex).score;
+				response.bottomScore  = rankingTree.locateNodeAtPosition(rankingTree.length - 1).value.getScore(request.rankingIndex).score;
+			}
+			response.maxElements = ranking.maxElementsOnTree;
+			response.treeHeight = -1;
+		} else {
+			response.result = 0x01;
+		}
+		
+		sendPacket(PacketType.GetRankingInfo, TA(response));
+	}
+
+	void handlePacket_RemoveElements(ubyte[] data) {
+		throw(new Exception("Not implemented RemoveElements"));
+	}
+
+	void handlePacket_RemoveAllElements(ubyte[] data) {
+		struct Request {
+			int rankingIndex;
+		}
+
+		struct Response {
+			uint result;
+			uint removedCount;
+		}
+		
+		scope Request request = FA2!Request(data);
+		Response response;
+		
+		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex)) {
+			response.result = 0x00;
+			UserRanking ranking = smrServer.userStats.getRanking(request.rankingIndex);
+			response.removedCount = ranking.sortedTree.length;
+			ranking.sortedTree.clear();
+		} else {
+			response.result = 0x01;
+			response.removedCount = 0;
+		}
+		
+		sendPacket(PacketType.RemoveAllElements, TA(response));
 	}
 	
 	void handlePacket(PacketType packetType, ubyte[] data) {
 		//writefln("HandlePacket(%d:%s)", packetType, to!string(packetType));
 		try {
 			switch (packetType) {
-				case PacketType.Ping:
-					sendPacket(PacketType.Ping, []);
-				break;
-				case PacketType.ListItems:
-					handlePacket_ListItems(data);
-					//scope s = new MemoryStream();
-					//s.
-				break;
-				case PacketType.SetUsers:
-					handlePacket_SetUsers(data);
-				break;
-				case PacketType.LocateUserPosition:
-					handlePacket_LocateUserPosition(data);
-				break;
+				// Misc
+				case PacketType.Ping             : handlePacket_Ping             (data); break;
+				case PacketType.GetVersion       : handlePacket_GetVersion       (data); break;
+				// Rankings
+				case PacketType.SetRanking       : handlePacket_SetRanking       (data); break;
+				case PacketType.GetRankingInfo   : handlePacket_GetRankingInfo   (data); break;
+				// Elements
+				case PacketType.SetElements      : handlePacket_SetElements      (data); break;
+				case PacketType.GetElementOffset : handlePacket_GetElementOffset (data); break;
+				case PacketType.ListElements     : handlePacket_ListElements     (data); break;
+				case PacketType.RemoveElements   : handlePacket_RemoveElements   (data); break;
+				case PacketType.RemoveAllElements: handlePacket_RemoveAllElements(data); break;
 				default:
 					throw(new Exception(std.string.format("Invalid packet 0x%02X", packetType)));
 					this.close();
