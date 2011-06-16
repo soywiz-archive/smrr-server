@@ -145,24 +145,25 @@ class SmrClient {
 	
 	void handlePacket_ListElements(ubyte[] data) {
 		struct Request {
-			uint rankingIndex;
-			uint offset;
-			uint count;
+			int rankingIndex;
+			int offset;
+			int count;
 		}
 		
 		struct ResponseEntry {
-			uint position;
-			uint userId;
-			uint score;
+			int position;
+			int userId;
+			int score;
 			uint timestamp;
 		}
 
 		scope Request request = FA2!Request(data);
 		
-		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex)) {
+		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex) && (request.offset >= 0) && (request.count > 0)) {
 			//writefln("[0]"); stdout.flush();
 			scope response = new MemoryStream();
 			int k = request.offset;
+			
 			//writefln("[1]"); stdout.flush();
 			foreach (User user; smrServer.userStats.getRankingTree(request.rankingIndex).all().skip(request.offset).limit(request.count)) {
 				//writefln("[2]"); stdout.flush();

@@ -1613,7 +1613,7 @@ assert(std.algorithm.equal(rbt[], [5]));
     
 	CountType countLesser(Node node) {
 	    static if (hasStats) {
-			if (node is null) return 0;
+			if (node is null) return -1;
 			if (node.parent is null) return node.childCountLeft;
 
 			//auto prev = node;

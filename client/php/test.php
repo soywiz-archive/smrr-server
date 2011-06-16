@@ -9,12 +9,17 @@ $time = time();
 //$SmrClient->removeAllElements(0);
 
 printf("Version: %d\n", $SmrClient->getVersion());
-print_r($SmrClient->getRankingInfo(0));
+
+if ($SmrClient->getRankingInfo(0) === null) {
+	$SmrClient->setRanking(0, SmrClientDirection::Descending, -1);
+}
+
+$SmrClient->setRanking(0, SmrClientDirection::Descending, 1000);
 
 //var_dump($SmrClient->setRanking(0, SmrClientDirection::Ascending, 10000000));
 
-//for ($n = 0; $n < 100000; $n++) {
-for ($n = 0; $n < 1000; $n++) {
+for ($n = 0; $n < 100000; $n++) {
+//for ($n = 0; $n < 1000; $n++) {
 //for ($n = 0; $n < 100; $n++) {
 //for ($n = 0; $n < 20; $n++) {
 	$SmrClient->setElementBuffer(0, $n, mt_rand(0, 500), $time + mt_rand(-50, 4));
@@ -34,10 +39,11 @@ print_r($SmrClient->listElements(0, $pos_1001, 3));
 printf("Position(0)\n");
 print_r($SmrClient->listElements(0, 0, 4));
 
-printf("Position(9997)\n");
+printf("Position(997)\n");
 print_r($SmrClient->listElements(0, 997, 10));
 //print_r($SmrClient->listItems(0, 20, 20));
 
+print_r($SmrClient->getRankingInfo(0));
 
 
 /*
