@@ -8,9 +8,9 @@ import std.process;
 import std.getopt;
 import core.memory;
 
-import smr.user;
-import smr.userstats;
-import smr.userranking;
+import smr.element;
+import smr.elementstats;
+import smr.elementranking;
 import smr.utils;
 
 const string SMR_VERSION = "0.1-beta";
@@ -114,7 +114,7 @@ class SmrClient {
 
 		for (int n = 0; n < count; n++) {
 			Request  request = (cast(Request *)data.ptr)[n];
-			smrServer.userStats.setUserRanking(request.rankingIndex, request.elementId, request.score, request.timestamp);
+			smrServer.elementStats.setElementRanking(request.rankingIndex, request.elementId, request.score, request.timestamp);
 		}
 					
 		sendPacket(PacketType.SetElements, TA(response));
@@ -135,8 +135,8 @@ class SmrClient {
 		Request  request = *(cast(Request *)data.ptr);
 		Response response;
 		
-		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex)) {
-			response.position = smrServer.userStats.locateById(request.rankingIndex, request.elementId);
+		if (smrServer.elementStats.isValidRankingIndex(request.rankingIndex)) {
+			response.position = smrServer.elementStats.locateById(request.rankingIndex, request.elementId);
 		} else {
 			response.position = -1;
 		}
@@ -152,26 +152,26 @@ class SmrClient {
 		
 		struct ResponseEntry {
 			int position;
-			int userId;
+			int elementId;
 			int score;
 			uint timestamp;
 		}
 
 		scope Request request = FA2!Request(data);
 		
-		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex) && (request.offset >= 0) && (request.count > 0)) {
+		if (smrServer.elementStats.isValidRankingIndex(request.rankingIndex) && (request.offset >= 0) && (request.count > 0)) {
 			//writefln("[0]"); stdout.flush();
 			scope response = new MemoryStream();
 			int k = request.offset;
 			
 			//writefln("[1]"); stdout.flush();
-			foreach (User user; smrServer.userStats.getRankingTree(request.rankingIndex).all().skip(request.offset).limit(request.count)) {
+			foreach (Element element; smrServer.elementStats.getRankingTree(request.rankingIndex).all().skip(request.offset).limit(request.count)) {
 				//writefln("[2]"); stdout.flush();
 				ResponseEntry responseEntry;
-				responseEntry.userId = user.userId;
+				responseEntry.elementId = element.elementId;
 				responseEntry.position = k;
-				responseEntry.score = user.getScore(request.rankingIndex).score;
-				responseEntry.timestamp = user.getScore(request.rankingIndex).timestamp;
+				responseEntry.score = element.getScore(request.rankingIndex).score;
+				responseEntry.timestamp = element.getScore(request.rankingIndex).timestamp;
 				response.write(TA(responseEntry));
 				k++;
 				//writefln("[3]"); stdout.flush();
@@ -199,7 +199,7 @@ class SmrClient {
 	void handlePacket_SetRanking(ubyte[] data) {
 		struct Request {
 			int                          rankingIndex;
-			UserRanking.SortingDirection direction;
+			ElementRanking.SortingDirection direction;
 			int                          maxElements;
 		}
 
@@ -211,9 +211,9 @@ class SmrClient {
 		scope Request request = FA2!Request(data);
 		Response response;
 		
-		if (smrServer.userStats.isValidRankingIndexToCreate(request.rankingIndex)) {
+		if (smrServer.elementStats.isValidRankingIndexToCreate(request.rankingIndex)) {
 			response.result = 0x00;
-			response.removedCount = smrServer.userStats.setRanking(request.rankingIndex, request.direction, request.maxElements);
+			response.removedCount = smrServer.elementStats.setRanking(request.rankingIndex, request.direction, request.maxElements);
 		} else {
 			response.result = 0x01;
 			response.removedCount = 0;
@@ -230,7 +230,7 @@ class SmrClient {
 		struct Response {
 			uint result;
 			uint length;
-			UserRanking.SortingDirection direction;
+			ElementRanking.SortingDirection direction;
 			uint topScore;
 			uint bottomScore;
 			int  maxElements;
@@ -240,8 +240,8 @@ class SmrClient {
 		scope Request request = FA2!Request(data);
 		Response response;
 		
-		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex)) {
-			UserRanking ranking = smrServer.userStats.getRanking(request.rankingIndex);
+		if (smrServer.elementStats.isValidRankingIndex(request.rankingIndex)) {
+			ElementRanking ranking = smrServer.elementStats.getRanking(request.rankingIndex);
 			auto rankingTree = ranking.sortedTree;
 			response.result = 0x00;
 			response.length =  rankingTree.length;
@@ -281,9 +281,9 @@ class SmrClient {
 		scope Request request = FA2!Request(data);
 		Response response;
 		
-		if (smrServer.userStats.isValidRankingIndex(request.rankingIndex)) {
+		if (smrServer.elementStats.isValidRankingIndex(request.rankingIndex)) {
 			response.result = 0x00;
-			UserRanking ranking = smrServer.userStats.getRanking(request.rankingIndex);
+			ElementRanking ranking = smrServer.elementStats.getRanking(request.rankingIndex);
 			response.removedCount = ranking.sortedTree.length;
 			ranking.sortedTree.clear();
 		} else {
@@ -360,14 +360,14 @@ class SmrClient {
 
 class SmrServer : TcpSocket {
 	SmrClient[Socket] clients;
-	UserStats userStats;
+	ElementStats elementStats;
 	
 	this(Config config) {
 		this(config.bindIp, config.bindPort);
 	}
 
 	this(string bindIp = "127.0.0.1", ushort bindPort = 9777) {
-		userStats = new UserStats();
+		elementStats = new ElementStats();
 		blocking = false;
 		bind(new InternetAddress(bindIp, bindPort));
 		listen(1024);
@@ -397,9 +397,8 @@ class SmrServer : TcpSocket {
 				}
 			}
 
-			readSockets:;			
-
-			foreach (Socket socket, SmrClient client; clients) {
+			foreach (SmrClient client; clients.values.dup) {
+				Socket socket = client.socket;
 				if (readSet.isSet(socket)) {
 					//writefln("readSet");
 					client.receive();
@@ -412,7 +411,6 @@ class SmrServer : TcpSocket {
 						// all the reserved memory manually. But that will be in a future
 						// version.
 						GC.minimize();
-						goto readSockets;					
 					}
 					/*
 					if (!client.receive()) {

@@ -188,7 +188,7 @@ class SmrClient extends SmrClientBase {
 		$data = $result->data;
 
 		while (strlen($data)) {
-			$entry = array_combine(array('position', 'userId', 'score', 'timestamp'), array_values(unpack('V4', $data)));
+			$entry = array_combine(array('position', 'elementId', 'score', 'timestamp'), array_values(unpack('V4', $data)));
 			$data = substr($data, 4 * 4);
 			$entries[] = $entry;
 		}
