@@ -1,0 +1,52 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleMassiveRealtimeRankingServer", "SimpleMassiveRealtimeRankingServer\SimpleMassiveRealtimeRankingServer.csproj", "{4D231169-C198-4CDB-ADBD-D39C1115B213}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleMassiveRealtimeRankingServerTests", "SimpleMassiveRealtimeRankingServerTests\SimpleMassiveRealtimeRankingServerTests.csproj", "{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{893A2AFD-466F-4103-972A-E1B7FACB7555}"
+	ProjectSection(SolutionItems) = preProject
+		Local.testsettings = Local.testsettings
+		SimpleMassiveRealtimeRankingServer.vsmdi = SimpleMassiveRealtimeRankingServer.vsmdi
+		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = SimpleMassiveRealtimeRankingServer.vsmdi
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Debug|x86.ActiveCfg = Debug|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Debug|x86.Build.0 = Debug|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Release|Any CPU.ActiveCfg = Release|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Release|Mixed Platforms.Build.0 = Release|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Release|x86.ActiveCfg = Release|x86
+		{4D231169-C198-4CDB-ADBD-D39C1115B213}.Release|x86.Build.0 = Release|x86
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{DA22DA46-F43B-40D4-A2F9-C224189CF6AF}.Release|x86.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
