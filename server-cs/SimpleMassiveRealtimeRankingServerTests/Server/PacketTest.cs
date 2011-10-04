@@ -1,8 +1,8 @@
-﻿using CSharpUtilsSandBox.Server;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 using CSharpUtils.Extensions;
+using SimpleMassiveRealtimeRankingServer.Server;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {

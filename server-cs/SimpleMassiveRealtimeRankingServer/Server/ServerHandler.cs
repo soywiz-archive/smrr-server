@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Net.NetworkInformation;
 
-namespace CSharpUtilsSandBox.Server
+namespace SimpleMassiveRealtimeRankingServer.Server
 {
 	public class ServerHandler
 	{
@@ -67,7 +67,7 @@ namespace CSharpUtilsSandBox.Server
 			this.TcpListener.BeginAcceptTcpClient((AcceptState) =>
 			{
 				var AcceptedTcpClient = (AcceptState.AsyncState as TcpListener).EndAcceptTcpClient(AcceptState);
-				var ClientHandler = new ClientHandler(AcceptedTcpClient.Client);
+				var ClientHandler = new ClientHandler(AcceptedTcpClient);
 				ClientHandler.StartReceivingData();
 
 				ClientConnected.Set();

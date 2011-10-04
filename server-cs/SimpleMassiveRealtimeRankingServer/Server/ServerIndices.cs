@@ -5,46 +5,64 @@ using System.Text;
 using CSharpUtils.Containers.RedBlackTree;
 using CSharpUtils.Extensions;
 
-namespace CSharpUtilsSandBox.Server
+namespace SimpleMassiveRealtimeRankingServer.Server
 {
 	public class ServerIndices
 	{
 		public enum SortingDirection : int
 		{
+			Invalid = 0,
 			Ascending = +1,
 			Descending = -1,
 		}
 
-		public class User
+		public class UserScore
 		{
-			public struct Score
-			{
-				public uint TimeStamp;
-				public int Value;
-			}
-
-			public void SetScore(uint ScoreId, uint ScoreTimeStamp, int ScoreValue)
-			{
-				Score Score = this.Scores.GetOrCreate(UserId);
-				Score.TimeStamp = ScoreTimeStamp;
-				Score.Value = ScoreValue;
-			}
-
 			public uint UserId;
-			public Dictionary<uint, Score> Scores = new Dictionary<uint, Score>();
+			public uint ScoreTimeStamp;
+			public int ScoreValue;
+
+			public override string ToString()
+			{
+				return String.Format(
+					"User(UserId:{0}, ScoreTimeStamp:{1}, ScoreValue:{2})",
+					UserId, ScoreTimeStamp, ScoreValue
+				);
+			}
+
+			public bool ShouldUpdate(uint ScoreTimeStamp, int ScoreValue)
+			{
+				if (ScoreTimeStamp < this.ScoreTimeStamp)
+				{
+					return false;
+				}
+				if (ScoreValue < this.ScoreValue)
+				{
+					return false;
+				}
+				return true;
+			}
+
+			public void SetScore(uint ScoreTimeStamp, int ScoreValue)
+			{
+				this.ScoreTimeStamp = ScoreTimeStamp;
+				this.ScoreValue = ScoreValue;
+			}
 		}
 
-		public class Index : IComparer<User>
+		public class UserScoreIndex : IComparer<UserScore>
 		{
-			SortingDirection SortingDirection;
-			uint ScoreIndexToSort;
-			RedBlackTreeWithStats<User> Tree;
+			public int IndexId;
+			internal SortingDirection SortingDirection = SortingDirection.Invalid;
+			internal Dictionary<uint, UserScore> UserScoresByUserId;
+			internal RedBlackTreeWithStats<UserScore> Tree;
 
-			public Index(SortingDirection SortingDirection, uint ScoreIndexToSort)
+			public UserScoreIndex(int IndexId, SortingDirection SortingDirection)
 			{
+				this.IndexId = IndexId;
 				this.SortingDirection = SortingDirection;
-				this.ScoreIndexToSort = ScoreIndexToSort;
-				this.Tree = new RedBlackTreeWithStats<User>(this);
+				this.Tree = new RedBlackTreeWithStats<UserScore>(this);
+				this.UserScoresByUserId = new Dictionary<uint, UserScore>();
 			}
 
 			/// <summary>
@@ -55,40 +73,96 @@ namespace CSharpUtilsSandBox.Server
 			/// <param name="A"></param>
 			/// <param name="B"></param>
 			/// <returns></returns>
-			int IComparer<User>.Compare(User A, User B)
+			int IComparer<UserScore>.Compare(UserScore A, UserScore B)
 			{
-				var ScoreA = A.Scores[ScoreIndexToSort];
-				var ScoreB = B.Scores[ScoreIndexToSort];
+				int Result;
 
-				var ValueA = ScoreA.Value;
-				var ValueB = ScoreB.Value;
+				Result = A.ScoreValue.CompareTo(B.ScoreValue);
+				Result *= (int)SortingDirection;
+				if (Result == 0)
+				{
+					Result = A.ScoreTimeStamp.CompareTo(B.ScoreTimeStamp);
+					if (Result == 0)
+					{
+						Result = A.UserId.CompareTo(B.UserId);
+					}
+				}
 
-				return ValueA.CompareTo(ValueB);
+				return Result;
 			}
 
-			internal void SetInfo(SortingDirection SortingDirection, uint ScoreIndexToSort)
+			public UserScore GetUserScore(uint UserId)
 			{
-				if ((this.SortingDirection != SortingDirection) || (this.ScoreIndexToSort != ScoreIndexToSort))
+				return this.UserScoresByUserId[UserId];
+			}
+
+			public UserScore UpdateUserScore(uint UserId, uint ScoreTimeStamp, int ScoreValue)
+			{
+				bool IsNew = false;
+
+				var UserScore = this.UserScoresByUserId.GetOrCreate(UserId, () => {
+					var NewUserScore = new UserScore() {
+						UserId = UserId,
+						ScoreTimeStamp = ScoreTimeStamp,
+						ScoreValue = ScoreValue,
+					};
+					Tree.Add(NewUserScore);
+					IsNew = true;
+					return NewUserScore;
+				});
+
+				if (!IsNew && UserScore.ShouldUpdate(ScoreTimeStamp, ScoreValue))
 				{
-					this.SortingDirection = SortingDirection;
-					this.ScoreIndexToSort = ScoreIndexToSort;
-					this.Tree = new RedBlackTreeWithStats<User>(this);
+					this.Tree.Remove(UserScore);
+					{
+						UserScore.SetScore(ScoreTimeStamp, ScoreValue);
+					}
+					this.Tree.Add(UserScore);
+				}
+
+				return UserScore;
+			}
+
+			public IEnumerable<UserScore> GetRange(int StartingPosition, int Count)
+			{
+				return Tree.All.Skip(StartingPosition).Take(Count);
+			}
+		}
+
+		internal List<UserScoreIndex> Indices = new List<UserScoreIndex>();
+		internal Dictionary<string, int> IndicesByName = new Dictionary<string, int>();
+
+		public UserScoreIndex this[int IndexId]
+		{
+			get
+			{
+				return this.Indices[IndexId];
+			}
+		}
+
+		public UserScoreIndex this[string IndexName]
+		{
+			get
+			{
+				lock (this)
+				{
+					return Indices[IndicesByName.GetOrCreate(IndexName, () =>
+					{
+						SortingDirection SortingDirection = SortingDirection.Invalid;
+						if (IndexName[0] == '+') SortingDirection = SortingDirection.Ascending;
+						if (IndexName[0] == '-') SortingDirection = SortingDirection.Descending;
+						if (SortingDirection == SortingDirection.Invalid) throw(new Exception("The index must be called '-IndexName' or '+IndexName' wether is a descending index or ascending index."));
+						var Index = new UserScoreIndex(Indices.Count, SortingDirection);
+						Indices.Add(Index);
+						return Index.IndexId;
+					})];
 				}
 			}
 		}
 
-		internal Dictionary<uint, User> Users = new Dictionary<uint, User>();
-		internal Dictionary<uint, Index> Indices = new Dictionary<uint, Index>();
-
-		public void UpdateUserScore(uint UserId, uint ScoreId, uint ScoreTimeStamp, int ScoreValue)
+		public IEnumerable<UserScore> GetRange(int IndexId, int StartingPosition, int Count)
 		{
-			this.Users.GetOrCreate(UserId).SetScore(ScoreId, ScoreTimeStamp, ScoreValue);
-		}
-
-		public void SetIndex(uint IndexId, SortingDirection SortingDirection, uint ScoreIndexToSort)
-		{
-			var Index = this.Indices.GetOrCreate(IndexId, () => { return new Index(SortingDirection, ScoreIndexToSort); });
-			Index.SetInfo(SortingDirection, ScoreIndexToSort);
+			return this.Indices[IndexId].GetRange(StartingPosition, Count);
 		}
 	}
 }

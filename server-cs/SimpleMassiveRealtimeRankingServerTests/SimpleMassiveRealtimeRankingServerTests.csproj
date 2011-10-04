@@ -50,6 +50,8 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Server\ServerIndicesTest.cs" />
+    <Compile Include="Server\BaseClientHandlerTest.cs" />
     <Compile Include="Server\ClientHandlerTest.cs" />
     <Compile Include="Server\ServerHandlerTest.cs" />
     <Compile Include="Server\PacketTest.cs" />

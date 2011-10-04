@@ -6,19 +6,19 @@ using System.Net.Sockets;
 using CSharpUtils;
 using CSharpUtils.Extensions;
 
-namespace CSharpUtilsSandBox.Server
+namespace SimpleMassiveRealtimeRankingServer.Server
 {
 	abstract public class BaseClientHandler
 	{
-		public Socket ClientSocket;
+		public TcpClient TcpClientSocket;
 		public NetworkStream ClientNetworkStream;
 		public ProduceConsumeBuffer<byte> DataBuffer;
 		protected List<ArraySegment<byte>> InternalSocketBuffers;
 
-		public BaseClientHandler(Socket ClientSocket)
+		public BaseClientHandler(TcpClient TcpClientSocket)
 		{
-			this.ClientSocket = ClientSocket;
-			this.ClientNetworkStream = new NetworkStream(ClientSocket);
+			this.TcpClientSocket = TcpClientSocket;
+			this.ClientNetworkStream = new NetworkStream(TcpClientSocket.Client);
 			this.InternalSocketBuffers = new List<ArraySegment<byte>>();
 			this.InternalSocketBuffers.Add(new ArraySegment<byte>(new byte[1024]));
 			this.DataBuffer = new ProduceConsumeBuffer<byte>();
@@ -26,14 +26,14 @@ namespace CSharpUtilsSandBox.Server
 
 		public void StartReceivingData()
 		{
-			this.ClientSocket.BeginReceive(this.InternalSocketBuffers, SocketFlags.None, this.HandleDataReceived, null);
+			this.TcpClientSocket.Client.BeginReceive(this.InternalSocketBuffers, SocketFlags.None, this.HandleDataReceived, null);
 		}
 
 		protected void HandleDataReceived(IAsyncResult AsyncResult)
 		{
 			try
 			{
-				int ReadedBytes = this.ClientSocket.EndReceive(AsyncResult);
+				int ReadedBytes = this.TcpClientSocket.Client.EndReceive(AsyncResult);
 				{
 					DataBuffer.Produce(this.InternalSocketBuffers[0].Array, 0, ReadedBytes);
 					TryHandlePacket(this.DataBuffer);
