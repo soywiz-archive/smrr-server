@@ -129,8 +129,8 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			}
 		}
 
-		internal List<UserScoreIndex> Indices = new List<UserScoreIndex>();
-		internal Dictionary<string, int> IndicesByName = new Dictionary<string, int>();
+		protected List<UserScoreIndex> Indices = new List<UserScoreIndex>();
+		protected Dictionary<string, int> IndiceIdsByName = new Dictionary<string, int>();
 
 		public UserScoreIndex this[int IndexId]
 		{
@@ -146,7 +146,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			{
 				lock (this)
 				{
-					return Indices[IndicesByName.GetOrCreate(IndexName, () =>
+					return Indices[IndiceIdsByName.GetOrCreate(IndexName, () =>
 					{
 						SortingDirection SortingDirection = SortingDirection.Invalid;
 						if (IndexName[0] == '+') SortingDirection = SortingDirection.Ascending;

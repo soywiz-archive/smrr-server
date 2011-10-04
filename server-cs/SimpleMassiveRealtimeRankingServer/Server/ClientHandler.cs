@@ -14,9 +14,12 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 {
 	public class ClientHandler : BaseClientHandler
 	{
-		public ClientHandler(TcpClient TcpClientSocket)
+		ServerManager ServerManager;
+
+		public ClientHandler(ServerManager ServerManager, TcpClient TcpClientSocket)
 			: base(TcpClientSocket)
 		{
+			this.ServerManager = ServerManager;
 		}
 
 		override protected void HandlePacket(Packet ReceivedPacket)
@@ -36,7 +39,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 					throw (new NotImplementedException("Can't handle packet '" + ReceivedPacket + "'"));
 			}
 			//Console.WriteLine(TypeUtils.GetTypesExtending(typeof(IPacketHandler)).ToStringArray());
-			PacketHandler.HandlePacket(ReceivedPacket, PacketToSend);
+			PacketHandler.HandlePacket(ServerManager, ReceivedPacket, PacketToSend);
 			PacketToSend.WritePacketTo(this.ClientNetworkStream);
 		}
 	}

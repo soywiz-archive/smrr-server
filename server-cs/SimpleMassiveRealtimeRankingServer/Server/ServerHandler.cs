@@ -16,6 +16,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		protected int ListenPort;
 		protected ManualResetEvent ClientConnected;
 		public ManualResetEvent IsAcceptingSocketEvent;
+		public ServerManager ServerManager;
 
 		public ServerHandler(string ListenIp, int ListenPort)
 		{
@@ -23,6 +24,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			this.ListenPort = ListenPort;
 			this.ClientConnected = new ManualResetEvent(false);
 			this.IsAcceptingSocketEvent = new ManualResetEvent(false);
+			this.ServerManager = new ServerManager();
 		}
 
 		public void ListenStart()
@@ -67,7 +69,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			this.TcpListener.BeginAcceptTcpClient((AcceptState) =>
 			{
 				var AcceptedTcpClient = (AcceptState.AsyncState as TcpListener).EndAcceptTcpClient(AcceptState);
-				var ClientHandler = new ClientHandler(AcceptedTcpClient);
+				var ClientHandler = new ClientHandler(ServerManager, AcceptedTcpClient);
 				ClientHandler.StartReceivingData();
 
 				ClientConnected.Set();

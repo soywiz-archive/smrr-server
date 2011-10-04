@@ -7,6 +7,6 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
 	public interface IPacketHandler
 	{
-		void HandlePacket(Packet ReceivedPacket, Packet PacketToSend);
+		void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend);
 	}
 }
