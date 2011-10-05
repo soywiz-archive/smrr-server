@@ -6,9 +6,9 @@ using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
-	public class SetElementsHandler : IPacketHandler
+	public class SetElementsHandler : BasePacketHandler
 	{
-		public struct ResponseStruct
+		public struct RequestStruct
 		{
 			public int RankingId;
 			public uint UserId;
@@ -16,15 +16,21 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 			public uint ScoreTimeStamp;
 		}
 
-		public void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend)
+		IEnumerable<RequestStruct> Requests;
+
+		public override void FastParseRequest(Packet ReceivedPacket)
 		{
-			while (!ReceivedPacket.Stream.Eof())
+			Requests = ReceivedPacket.Stream.ReadStructVectorUntilTheEndOfStream<RequestStruct>();
+		}
+
+		public override void Execute(Packet PacketToSend)
+		{
+			foreach (var Request in Requests)
 			{
-				var Response = ReceivedPacket.Stream.ReadStruct<ResponseStruct>();
-				ServerManager.ServerIndices[Response.RankingId].UpdateUserScore(
-					UserId: Response.UserId,
-					ScoreTimeStamp: Response.ScoreTimeStamp,
-					ScoreValue: Response.ScoreValue
+				ServerManager.ServerIndices[Request.RankingId].UpdateUserScore(
+					UserId: Request.UserId,
+					ScoreTimeStamp: Request.ScoreTimeStamp,
+					ScoreValue: Request.ScoreValue
 				);
 			}
 		}

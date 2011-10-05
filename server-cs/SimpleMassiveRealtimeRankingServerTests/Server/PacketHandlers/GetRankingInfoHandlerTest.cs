@@ -4,6 +4,7 @@ using System;
 using SimpleMassiveRealtimeRankingServer.Server;
 using System.IO;
 using CSharpUtils.Extensions;
+using SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
@@ -13,27 +14,22 @@ namespace SimpleMassiveRealtimeRankingServerTests
 		[TestMethod]
 		public void HandlePacketTest()
 		{
-			var ServerManager = new ServerManager();
-			var MyIndex = ServerManager.ServerIndices["+myindex"];
-			MyIndex.UpdateUserScore(1, 1000, 9999);
+			var TestPacketHelperInstance = new TestPacketHelper(
+				Packet.PacketType.GetRankingInfo,
+				new GetRankingInfoHandler()
+			);
 
-			var ReceivedPacket = new Packet(Packet.PacketType.GetRankingInfo, new MemoryStream().PreservePositionAndLock((Stream) =>
+			var DescendingIndex = TestPacketHelperInstance.DescendingIndex;
+			DescendingIndex.UpdateUserScore(1, 1000, 9999);
+
+			TestPacketHelperInstance.Handle((Stream) =>
 			{
-				new BinaryWriter(Stream).Write((int)MyIndex.IndexId);
-			}).ToArray());
-			var PacketToSend = new Packet(Packet.PacketType.GetRankingInfo);
+				new BinaryWriter(Stream).Write((int)DescendingIndex.IndexId);
+			});
 
-			(new GetRankingInfoHandler()).HandlePacket(ServerManager, ReceivedPacket, PacketToSend);
 			Assert.AreEqual(
-				"Packet(Type=GetRankingInfo, Data=" +
-					"00000000" + // Result
-					"01000000" + // Length
-					"01000000" + // Direction
-					"0f270000" + // TopScore
-					"0f270000" + // BottomScore
-					"ffffffff" + // MaxElements
-				")",
-				PacketToSend.ToString()
+				"ResponseStruct(Result=0,Length=1,Direction=Descending,TopScore=9999,BottomScore=9999,MaxElements=-1)",
+				TestPacketHelperInstance.PacketToSend.Stream.ReadStruct<GetRankingInfoHandler.ResponseStruct>().ToStringDefault()
 			);
 		}
 	}

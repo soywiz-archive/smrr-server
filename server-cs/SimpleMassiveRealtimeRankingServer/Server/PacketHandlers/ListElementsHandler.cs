@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
-	public class ListElementsHandler : IPacketHandler
+	public class ListElementsHandler : BasePacketHandler
 	{
 		public struct RequestStruct
 		{
@@ -29,9 +29,15 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 			}
 		}
 
-		public void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend)
+		RequestStruct Request;
+
+		public override void FastParseRequest(Packet ReceivedPacket)
 		{
-			var Request = ReceivedPacket.Stream.ReadStruct<RequestStruct>();
+			Request = ReceivedPacket.Stream.ReadStruct<RequestStruct>();
+		}
+
+		public override void Execute(Packet PacketToSend)
+		{
 			var RankingIndex = ServerManager.ServerIndices[Request.RankingIndexId];
 			int CurrentEntryOffset = Request.Offset;
 			foreach (var UserScore in RankingIndex.GetRange(Request.Offset, Request.Count))

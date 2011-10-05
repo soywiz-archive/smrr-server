@@ -2,11 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CSharpUtils.Threading;
 
 namespace SimpleMassiveRealtimeRankingServer.Server
 {
 	public class ServerManager
 	{
+		public CustomThreadPool CustomThreadPool;
+
+		public ServerManager()
+		{
+			this.CustomThreadPool = new CustomThreadPool(1);
+		}
+
+
 		public struct VersionStruct
 		{
 			public byte MajorVersion;

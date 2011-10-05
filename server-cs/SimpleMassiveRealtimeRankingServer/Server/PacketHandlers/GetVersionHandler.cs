@@ -6,9 +6,13 @@ using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
-	public class GetVersionHandler : IPacketHandler
+	public class GetVersionHandler : BasePacketHandler
 	{
-		public void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend)
+		public override void FastParseRequest(Packet ReceivedPacket)
+		{
+		}
+
+		public override void Execute(Packet PacketToSend)
 		{
 			PacketToSend.Stream.WriteStruct(ServerManager.Version);
 		}

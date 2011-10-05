@@ -9,7 +9,7 @@ class SmrPacketType {
 	////////////////////////////////
 	/// Rankings ///////////////////
 	////////////////////////////////
-	const SetRanking         = 0x10;
+	const GetRankingIdByName = 0x10;
 	const GetRankingInfo     = 0x11;
 	////////////////////////////////
 	/// Elements ///////////////////
@@ -81,14 +81,14 @@ class SmrClientBase {
 			$response = $this->recvPacket();
 		}
 		$end = microtime(true);
-		
+
 		if ($response->type != $type) throw(new Exception("Mismatch response packet type"));
 
 		//printf("%.6f\n", $end - $start);
 
 		return $response;
 	}
-	
+
 	public function recvPacket() {
 		//echo "[@0:.]";
 		list(,$packetSize) = unpack('v', $v = fread($this->f, 2));
@@ -107,6 +107,7 @@ class SmrClient extends SmrClientBase {
 	// Buffer
 	const MAX_SET_ELEMENTS = 4095; // pow(2, 16) / (4 * 4)
 	protected $bufferSetElements = array();
+	protected $cachedRankingIdsByNames = array();
 
 	public function ping() {
 		return $this->sendPacket(SmrPacketType::Ping);
@@ -114,18 +115,27 @@ class SmrClient extends SmrClientBase {
 
 	public function getVersion() {
 		$result = $this->sendPacket(SmrPacketType::GetVersion);
-		list(,$version) = unpack('V', $result->data);
-		return $version;
+		list(,$major,$minor,$revision,$patch) = unpack('c*', $result->data);
+		return "{$major}.{$minor}.{$revision}.{$patch}";
 	}
-	
-	public function setRanking($rankingIndex, $direction, $maxElements) {
-		$result = $this->sendPacket(SmrPacketType::SetRanking, pack('V*', $rankingIndex, $direction, $maxElements));
-		list(,$result, $removedCount) = unpack('V2', $result->data);
-		if ($result != 0) throw(new Exception("Error in setRanking"));
-		return $removedCount;
+
+	public function _getRankingIndexFromName($rankingName) {
+		if (is_int($rankingName)) {
+			return $rankingName;
+		}
+		$cache = &$this->cachedRankingIdsByNames[$rankingName];
+		if (!isset($cache)) $cache = $this->getRankingIdByName($rankingName);
+		return $cache;
 	}
-	
-	public function getRankingInfo($rankingIndex) {
+
+	public function getRankingIdByName($rankingName) {
+		$result = $this->sendPacket(SmrPacketType::GetRankingIdByName, "{$rankingName}\0");
+		list(,$indexId) = unpack('V*', $result->data);
+		return $indexId;
+	}
+
+	public function getRankingInfo($rankingName) {
+		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
 		$result = $this->sendPacket(SmrPacketType::GetRankingInfo, pack('V*', $rankingIndex));
 		$info = array();
 		list(,$info['result'], $info['length'], $info['direction'], $info['topScore'], $info['bottomScore'], $info['maxElements'], $info['treeHeight']) = unpack('V*', $result->data);
@@ -134,7 +144,8 @@ class SmrClient extends SmrClientBase {
 		return $info;
 	}
 
-	public function setElementBuffer($rankingIndex, $elementId, $score, $timestamp) {
+	public function setElementBuffer($rankingName, $elementId, $score, $timestamp) {
+		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
 		$this->bufferSetElements[] = pack('V*', $rankingIndex, $elementId, $score, $timestamp);
 		if (count($this->bufferSetElements) >= self::MAX_SET_ELEMENTS) {
 			$this->setElementBufferFlush();
@@ -162,7 +173,8 @@ class SmrClient extends SmrClientBase {
 		return $result;
 	}
 
-	public function getElementOffset($rankingIndex, $elementId) {
+	public function getElementOffset($rankingName, $elementId) {
+		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
 		$this->setElementBufferFlush();
 
 		$result = $this->sendPacket(
@@ -174,7 +186,8 @@ class SmrClient extends SmrClientBase {
 		return $position;
 	}
 
-	public function listElements($rankingIndex, $offset, $count) {
+	public function listElements($rankingName, $offset, $count) {
+		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
 		$this->setElementBufferFlush();
 
 		$result = $this->sendPacket(
@@ -199,8 +212,9 @@ class SmrClient extends SmrClientBase {
 	public function removeElements() {
 		throw(new Exception("Not implemented"));
 	}
-	
-	public function removeAllElements($rankingIndex) {
+
+	public function removeAllElements($rankingName) {
+		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
 		$result = $this->sendPacket(SmrPacketType::RemoveAllElements, pack('V', $rankingIndex));
 		list(, $result, $removedCount) = unpack('V2', $result->data);
 		if ($result != 0) throw(new Exception("Error in removeAllElements"));

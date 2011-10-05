@@ -5,9 +5,13 @@ using System.Text;
 
 namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
-	public class PingHandler : IPacketHandler
+	public class PingHandler : BasePacketHandler
 	{
-		public void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend)
+		public override void FastParseRequest(Packet ReceivedPacket)
+		{
+		}
+
+		public override void Execute(Packet PacketToSend)
 		{
 		}
 	}

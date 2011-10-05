@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using SimpleMassiveRealtimeRankingServer.Server;
+using SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
@@ -11,13 +12,18 @@ namespace SimpleMassiveRealtimeRankingServerTests
 		[TestMethod]
 		public void HandlePacketTest()
 		{
-			var ReceivedPacket = new Packet(Packet.PacketType.GetVersion);
-			var PacketToSend = new Packet(Packet.PacketType.GetVersion);
+			var TestPacketHelperInstance = new TestPacketHelper(
+				Packet.PacketType.GetVersion,
+				new GetVersionHandler()
+			);
 
-			(new GetVersionHandler()).HandlePacket(new ServerManager(), ReceivedPacket, PacketToSend);
+			TestPacketHelperInstance.Handle((Stream) =>
+			{
+			});
+
 			Assert.AreEqual(
 				"Packet(Type=GetVersion, Data=01010000)",
-				PacketToSend.ToString()
+				TestPacketHelperInstance.PacketToSend.ToString()
 			);
 		}
 	}

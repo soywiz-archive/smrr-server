@@ -6,7 +6,7 @@ using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
-	public class GetElementOffsetHandler : IPacketHandler
+	public class GetElementOffsetHandler : BasePacketHandler
 	{
 		public struct RequestStruct
 		{
@@ -19,9 +19,15 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 			public int IndexPosition;
 		}
 
-		public void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend)
+		RequestStruct Request;
+
+		public override void FastParseRequest(Packet ReceivedPacket)
 		{
-			var Request = ReceivedPacket.Stream.ReadStruct<RequestStruct>();
+			this.Request = ReceivedPacket.Stream.ReadStruct<RequestStruct>();
+		}
+
+		public override void Execute(Packet PacketToSend)
+		{
 			var Ranking = ServerManager.ServerIndices[Request.RankingIndex];
 			PacketToSend.Stream.WriteStruct(new ResponseStruct()
 			{

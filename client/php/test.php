@@ -8,42 +8,55 @@ $time = time();
 
 //$SmrClient->removeAllElements(0);
 
-printf("Version: %d\n", $SmrClient->getVersion());
+printf("Version: %s\n", $SmrClient->getVersion());
 
-if ($SmrClient->getRankingInfo(0) === null) {
-	$SmrClient->setRanking(0, SmrClientDirection::Descending, -1);
+//$STRESS = true;
+$STRESS = false;
+
+if ($STRESS) {
+	$NumberOfIndexes = 100;
+	$NumberOfEntriesPerIndexCapped = 10000;
+	$NumberOfEntriesToAddPerIndex  = 100000;
+} else {
+	$NumberOfIndexes = 1;
+	$NumberOfEntriesPerIndexCapped = 10000;
+	$NumberOfEntriesToAddPerIndex  = 10;
 }
 
-$SmrClient->setRanking(0, SmrClientDirection::Descending, 1000);
+for ($m = 0; $m < $NumberOfIndexes; $m++) {
+	$Index = $SmrClient->getRankingIdByName('-Index@' . $m . ':' . $NumberOfEntriesPerIndexCapped);
 
-//var_dump($SmrClient->setRanking(0, SmrClientDirection::Ascending, 10000000));
+	printf("Index: %d\n", $Index);
 
-for ($n = 0; $n < 100000; $n++) {
-//for ($n = 0; $n < 1000; $n++) {
-//for ($n = 0; $n < 100; $n++) {
-//for ($n = 0; $n < 20; $n++) {
-	$SmrClient->setElementBuffer(0, $n, mt_rand(0, 500), $time + mt_rand(-50, 4));
+	//var_dump($SmrClient->setRanking(0, SmrClientDirection::Ascending, 10000000));
+
+	for ($n = 0; $n < $NumberOfEntriesToAddPerIndex; $n++) {
+	//for ($n = 0; $n < 1000; $n++) {
+	//for ($n = 0; $n < 100; $n++) {
+	//for ($n = 0; $n < 20; $n++) {
+		$SmrClient->setElementBuffer($Index, $n, mt_rand(0, 500), $time + mt_rand(-50, 4));
+	}
+
+	$SmrClient->setElementBuffer($Index, 1000, 200, $time);
+	$SmrClient->setElementBuffer($Index, 1001, 300, $time);
+	$SmrClient->setElementBuffer($Index, 1000, 300, $time + 1);
+	//$SmrClient->setElementBufferFlush();
+
+	printf("Position(1000):%d\n", $pos_1000 = $SmrClient->getElementOffset($Index, 1000));
+	print_r($SmrClient->listElements($Index, $pos_1000, 3));
+
+	printf("Position(1001):%d\n", $pos_1001 = $SmrClient->getElementOffset($Index, 1001));
+	print_r($SmrClient->listElements($Index, $pos_1001, 3));
+
+	printf("Position(0)\n");
+	print_r($SmrClient->listElements($Index, 0, 4));
+
+	printf("Position(997)\n");
+	print_r($SmrClient->listElements($Index, 997, 10));
+	//print_r($SmrClient->listItems(0, 20, 20));
+
+	print_r($SmrClient->getRankingInfo($Index));
 }
-
-$SmrClient->setElementBuffer(0, 1000, 200, $time);
-$SmrClient->setElementBuffer(0, 1001, 300, $time);
-$SmrClient->setElementBuffer(0, 1000, 300, $time + 1);
-//$SmrClient->setElementBufferFlush();
-
-printf("Position(1000):%d\n", $pos_1000 = $SmrClient->getElementOffset(0, 1000));
-print_r($SmrClient->listElements(0, $pos_1000, 3));
-
-printf("Position(1001):%d\n", $pos_1001 = $SmrClient->getElementOffset(0, 1001));
-print_r($SmrClient->listElements(0, $pos_1001, 3));
-
-printf("Position(0)\n");
-print_r($SmrClient->listElements(0, 0, 4));
-
-printf("Position(997)\n");
-print_r($SmrClient->listElements(0, 997, 10));
-//print_r($SmrClient->listItems(0, 20, 20));
-
-print_r($SmrClient->getRankingInfo(0));
 
 
 /*

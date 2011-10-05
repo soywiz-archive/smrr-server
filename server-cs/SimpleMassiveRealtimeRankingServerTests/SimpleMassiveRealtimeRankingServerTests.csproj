@@ -50,6 +50,9 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Server\PacketHandlers\RemoveAllElementsHandlerTest.cs" />
+    <Compile Include="Server\PacketHandlers\Helpers\TestPacketHelper.cs" />
+    <Compile Include="Server\PacketHandlers\RemoveElementsHandlerTest.cs" />
     <Compile Include="Server\PacketHandlers\PingHandlerTest.cs" />
     <Compile Include="Server\PacketHandlers\ListElementsHandlerTest.cs" />
     <Compile Include="Server\PacketHandlers\GetElementOffsetHandlerTest.cs" />

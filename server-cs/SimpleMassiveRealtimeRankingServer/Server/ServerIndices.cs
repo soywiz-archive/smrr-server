@@ -127,6 +127,12 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			{
 				return Tree.All.Skip(StartingPosition).Take(Count);
 			}
+
+			public void RemoveAllItems()
+			{
+				Tree.Clear();
+				UserScoresByUserId.Clear();
+			}
 		}
 
 		protected List<UserScoreIndex> Indices = new List<UserScoreIndex>();

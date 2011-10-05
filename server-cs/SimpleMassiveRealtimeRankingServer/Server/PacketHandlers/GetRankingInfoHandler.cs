@@ -6,7 +6,7 @@ using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
-	public class GetRankingInfoHandler : IPacketHandler
+	public class GetRankingInfoHandler : BasePacketHandler
 	{
 		public struct RequestStruct
 		{
@@ -21,25 +21,40 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 			public int TopScore;
 			public int BottomScore;
 			public int MaxElements;
-			//public uint TreeHeight;
+			public int TreeHeight;
 		}
 
-		public void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend)
-		{
-			//Console.WriteLine(ReceivedPacket);
-			var Request = ReceivedPacket.Stream.ReadStruct<RequestStruct>();
-			var Index = ServerManager.ServerIndices[Request.RankingIndex];
+		RequestStruct Request;
 
-			PacketToSend.Stream.WriteStruct(new ResponseStruct()
+		public override void FastParseRequest(Packet ReceivedPacket)
+		{
+			Request = ReceivedPacket.Stream.ReadStruct<RequestStruct>();
+		}
+
+		public override void Execute(Packet PacketToSend)
+		{
+			var Index = ServerManager.ServerIndices[Request.RankingIndex];
+			ResponseStruct Response;
+
+			Response = new ResponseStruct()
 			{
 				Result = 0,
 				Length = Index.Tree.Count,
 				Direction = Index.SortingDirection,
-				TopScore = Index.Tree.FrontElement.ScoreValue,
-				BottomScore = Index.Tree.BackElement.ScoreValue,
+				TopScore = 0,
+				BottomScore = 0,
 				MaxElements = -1,
+				TreeHeight = -1
 				//TreeHeight = Index.Tree.height
-			});
+			};
+
+			if (Index.Tree.Count > 0)
+			{
+				Response.TopScore = Index.Tree.FrontElement.ScoreValue;
+				Response.BottomScore = Index.Tree.BackElement.ScoreValue;
+			}
+
+			PacketToSend.Stream.WriteStruct(Response);
 		}
 	}
 

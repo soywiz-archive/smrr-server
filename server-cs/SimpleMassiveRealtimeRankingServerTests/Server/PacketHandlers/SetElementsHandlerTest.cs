@@ -4,6 +4,7 @@ using System;
 using SimpleMassiveRealtimeRankingServer.Server;
 using System.IO;
 using CSharpUtils.Extensions;
+using SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
@@ -13,28 +14,27 @@ namespace SimpleMassiveRealtimeRankingServerTests
 		[TestMethod]
 		public void HandlePacketTest()
 		{
-			var ServerManager = new ServerManager();
+			var TestPacketHelperInstance = new TestPacketHelper(
+				Packet.PacketType.SetElements,
+				new SetElementsHandler()
+			);
 
-			var TestIndex = ServerManager.ServerIndices["-MyIndex"];
+			var TestIndex = TestPacketHelperInstance.DescendingIndex;
 
-			var ReceivedPacket = new Packet(Packet.PacketType.SetElements, new MemoryStream().PreservePositionAndLock(
-				(Stream) =>
-				{
-					var BinaryWriter = new BinaryWriter(Stream);
-					BinaryWriter.Write((int)TestIndex.IndexId); // RankingId
-					BinaryWriter.Write((uint)0); // UserId
-					BinaryWriter.Write((uint)100); // ScoreValue
-					BinaryWriter.Write((uint)1000); // ScoreTimeStamp
+			TestPacketHelperInstance.Handle((Stream) =>
+			{
+				var BinaryWriter = new BinaryWriter(Stream);
+				BinaryWriter.Write((int)TestIndex.IndexId); // RankingId
+				BinaryWriter.Write((uint)0); // UserId
+				BinaryWriter.Write((uint)100); // ScoreValue
+				BinaryWriter.Write((uint)1000); // ScoreTimeStamp
 
-					BinaryWriter.Write((int)TestIndex.IndexId); // RankingId
-					BinaryWriter.Write((uint)1); // UserId
-					BinaryWriter.Write((uint)150); // ScoreValue
-					BinaryWriter.Write((uint)1001); // ScoreTimeStamp
-				}
-			).ToArray());
-			var PacketToSend = new Packet(Packet.PacketType.SetElements);
+				BinaryWriter.Write((int)TestIndex.IndexId); // RankingId
+				BinaryWriter.Write((uint)1); // UserId
+				BinaryWriter.Write((uint)150); // ScoreValue
+				BinaryWriter.Write((uint)1001); // ScoreTimeStamp
+			});
 
-			(new SetElementsHandler()).HandlePacket(ServerManager, ReceivedPacket, PacketToSend);
 			Assert.AreEqual(
 				"User(UserId:1, ScoreTimeStamp:1001, ScoreValue:150)" +
 				"User(UserId:0, ScoreTimeStamp:1000, ScoreValue:100)" +
