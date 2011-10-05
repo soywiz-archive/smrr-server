@@ -8,20 +8,20 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
 	public class GetRankingInfoHandler : IPacketHandler
 	{
-		internal struct RequestStruct
+		public struct RequestStruct
 		{
-			internal int RankingIndex;
+			public int RankingIndex;
 		}
 
-		internal struct ResponseStruct
+		public struct ResponseStruct
 		{
-			internal int Result;
-			internal int Length;
-			internal ServerIndices.SortingDirection Direction;
-			internal int TopScore;
-			internal int BottomScore;
-			internal int MaxElements;
-			//internal uint TreeHeight;
+			public int Result;
+			public int Length;
+			public ServerIndices.SortingDirection Direction;
+			public int TopScore;
+			public int BottomScore;
+			public int MaxElements;
+			//public uint TreeHeight;
 		}
 
 		public void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend)

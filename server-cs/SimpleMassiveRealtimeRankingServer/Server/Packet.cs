@@ -35,19 +35,31 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		public PacketType Type;
 		public MemoryStream Stream;
 		public BinaryWriter BinaryWriter;
+		public BinaryReader BinaryReader;
 
 		public Packet(PacketType Type, byte[] Data)
 		{
-			this.Type = Type;
-			this.Stream = new MemoryStream(Data);
-			this.BinaryWriter = new BinaryWriter(this.Stream);
+			_SetUp(Type, Data);
 		}
 
 		public Packet(PacketType Type)
 		{
+			_SetUp(Type, null);
+		}
+
+		protected void _SetUp(PacketType Type, byte[] Data)
+		{
 			this.Type = Type;
-			this.Stream = new MemoryStream();
+			if (Data == null)
+			{
+				this.Stream = new MemoryStream();
+			}
+			else
+			{
+				this.Stream = new MemoryStream(Data);
+			}
 			this.BinaryWriter = new BinaryWriter(this.Stream);
+			this.BinaryReader = new BinaryReader(this.Stream);
 		}
 
 		static public Packet FromStream(Stream Stream)

@@ -8,12 +8,12 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
 	public class SetElementsHandler : IPacketHandler
 	{
-		internal struct ResponseStruct
+		public struct ResponseStruct
 		{
-			internal int RankingId;
-			internal uint UserId;
-			internal int ScoreValue;
-			internal uint ScoreTimeStamp;
+			public int RankingId;
+			public uint UserId;
+			public int ScoreValue;
+			public uint ScoreTimeStamp;
 		}
 
 		public void HandlePacket(ServerManager ServerManager, Packet ReceivedPacket, Packet PacketToSend)
