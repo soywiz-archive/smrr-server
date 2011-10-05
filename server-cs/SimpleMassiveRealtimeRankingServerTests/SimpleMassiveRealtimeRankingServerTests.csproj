@@ -50,6 +50,8 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Server\PacketHandlers\PingHandlerTest.cs" />
+    <Compile Include="Server\PacketHandlers\ListElementsHandlerTest.cs" />
     <Compile Include="Server\PacketHandlers\GetElementOffsetHandlerTest.cs" />
     <Compile Include="Server\PacketHandlers\GetRankingInfoHandlerTest.cs" />
     <Compile Include="Server\PacketHandlers\GetRankingIdByNameHandlerTest.cs" />

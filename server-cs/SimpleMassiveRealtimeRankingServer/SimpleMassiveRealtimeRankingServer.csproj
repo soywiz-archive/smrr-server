@@ -53,6 +53,8 @@
     <Compile Include="Server\PacketHandlers\GetRankingInfoHandler.cs" />
     <Compile Include="Server\PacketHandlers\GetVersionHandler.cs" />
     <Compile Include="Server\PacketHandlers\IPacketHandler.cs" />
+    <Compile Include="Server\PacketHandlers\ListElementsHandler.cs" />
+    <Compile Include="Server\PacketHandlers\PingHandler.cs" />
     <Compile Include="Server\PacketHandlers\SetElementsHandler.cs" />
     <Compile Include="Server\ServerHandler.cs" />
     <Compile Include="Server\ServerIndices.cs" />
