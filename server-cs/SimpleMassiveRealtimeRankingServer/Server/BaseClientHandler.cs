@@ -26,7 +26,10 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
 		public void StartReceivingData()
 		{
-			this.TcpClientSocket.Client.BeginReceive(this.InternalSocketBuffers, SocketFlags.None, this.HandleDataReceived, null);
+			if (this.TcpClientSocket.Connected && this.TcpClientSocket.Client.Connected)
+			{
+				this.TcpClientSocket.Client.BeginReceive(this.InternalSocketBuffers, SocketFlags.None, this.HandleDataReceived, null);
+			}
 		}
 
 		protected void HandleDataReceived(IAsyncResult AsyncResult)
@@ -38,7 +41,10 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 					DataBuffer.Produce(this.InternalSocketBuffers[0].Array, 0, ReadedBytes);
 					TryHandlePacket(this.DataBuffer);
 				}
-				StartReceivingData();
+				if (ReadedBytes > 0)
+				{
+					StartReceivingData();
+				}
 			}
 			catch (Exception Exception)
 			{
