@@ -10,11 +10,10 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 	{
 		public CustomThreadPool CustomThreadPool;
 
-		public ServerManager()
+		public ServerManager(int NumberOfThreads = 1)
 		{
-			this.CustomThreadPool = new CustomThreadPool(1);
+			this.CustomThreadPool = new CustomThreadPool(NumberOfThreads);
 		}
-
 
 		public struct VersionStruct
 		{

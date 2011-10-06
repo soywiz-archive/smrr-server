@@ -8,26 +8,39 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 {
 	public class SetElementsHandler : BasePacketHandler
 	{
-		public struct RequestStruct
+		public struct RequestHeaderStruct
 		{
 			public int RankingId;
+		}
+
+		public struct RequestEntryStruct
+		{
 			public uint UserId;
 			public int ScoreValue;
 			public uint ScoreTimeStamp;
 		}
 
-		IEnumerable<RequestStruct> Requests;
+		RequestHeaderStruct RequestHeader;
+		IEnumerable<RequestEntryStruct> RequestEntries;
 
 		public override void FastParseRequest(Packet ReceivedPacket)
 		{
-			Requests = ReceivedPacket.Stream.ReadStructVectorUntilTheEndOfStream<RequestStruct>();
+			RequestHeader = ReceivedPacket.Stream.ReadStruct<RequestHeaderStruct>();
+			RequestEntries = ReceivedPacket.Stream.ReadStructVectorUntilTheEndOfStream<RequestEntryStruct>();
+		}
+
+		public override int GetThreadAffinityAfterParseRequest()
+		{
+			return this.RequestHeader.RankingId;
 		}
 
 		public override void Execute(Packet PacketToSend)
 		{
-			foreach (var Request in Requests)
+			var Index = ServerManager.ServerIndices[RequestHeader.RankingId];
+
+			foreach (var Request in RequestEntries)
 			{
-				ServerManager.ServerIndices[Request.RankingId].UpdateUserScore(
+				Index.UpdateUserScore(
 					UserId: Request.UserId,
 					ScoreTimeStamp: Request.ScoreTimeStamp,
 					ScoreValue: Request.ScoreValue

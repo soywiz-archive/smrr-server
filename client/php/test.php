@@ -10,8 +10,8 @@ $time = time();
 
 printf("Version: %s\n", $SmrClient->getVersion());
 
-//$STRESS = true;
-$STRESS = false;
+$STRESS = true;
+//$STRESS = false;
 
 if ($STRESS) {
 	$NumberOfIndexes = 100;

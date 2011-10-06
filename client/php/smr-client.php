@@ -66,12 +66,13 @@ class SmrClientBase {
 	}
 
 	public function close() {
-		$this->setElementBufferFlush();
 		fclose($this->f);
 		$this->f = null;
 	}
 
 	public function sendPacket($type, $data = '') {
+		$data_len = strlen($data);
+		if ($data_len > 65535) throw(new Exception("Packet is too big '" . $data_len . "'"));
 		$start = microtime(true);
 		{
 			fwrite($this->f, pack('v', strlen($data)));
@@ -104,8 +105,6 @@ class SmrClientBase {
 }
 
 class SmrClient extends SmrClientBase {
-	// Buffer
-	const MAX_SET_ELEMENTS = 4095; // pow(2, 16) / (4 * 4)
 	protected $bufferSetElements = array();
 	protected $cachedRankingIdsByNames = array();
 
@@ -146,36 +145,18 @@ class SmrClient extends SmrClientBase {
 
 	public function setElementBuffer($rankingName, $elementId, $score, $timestamp) {
 		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
-		$this->bufferSetElements[] = pack('V*', $rankingIndex, $elementId, $score, $timestamp);
-		if (count($this->bufferSetElements) >= self::MAX_SET_ELEMENTS) {
-			$this->setElementBufferFlush();
-		}
+		$buffer = &$this->bufferSetElements[$rankingIndex];
+		if (!isset($buffer)) $buffer = new SmrClient_RankingBuffer($this, $rankingIndex);
+		return $buffer->setElementBuffer($elementId, $score, $timestamp);
 	}
 
 	public function setElements($infos) {
 		throw(new Exception("Not implemented"));
 	}
 
-	protected function _setElements($rawInfos) {
-		assert(count($rawInfos) <= self::MAX_SET_ELEMENTS);
-		if (count($rawInfos)) {
-			return $this->sendPacket(SmrPacketType::SetElements, implode('', $rawInfos));
-		} else {
-			return false;
-		}
-	}
-
-	public function setElementBufferFlush() {
-		if (empty($this->bufferSetElements)) return;
-
-		$result = $this->_setElements($this->bufferSetElements);
-		$this->bufferSetElements = array();
-		return $result;
-	}
-
 	public function getElementOffset($rankingName, $elementId) {
 		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
-		$this->setElementBufferFlush();
+		$this->_setElementBufferFlush($rankingIndex);
 
 		$result = $this->sendPacket(
 			SmrPacketType::GetElementOffset,
@@ -188,7 +169,7 @@ class SmrClient extends SmrClientBase {
 
 	public function listElements($rankingName, $offset, $count) {
 		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
-		$this->setElementBufferFlush();
+		$this->_setElementBufferFlush($rankingIndex);
 
 		$result = $this->sendPacket(
 			SmrPacketType::ListElements,
@@ -208,6 +189,13 @@ class SmrClient extends SmrClientBase {
 
 		return $entries;
 	}
+	
+	protected function _setElementBufferFlush($rankingIndex) {
+		$buffer = &$this->bufferSetElements[$rankingIndex];
+		if (isset($buffer)) {
+			$buffer->setElementBufferFlush();
+		}
+	}
 
 	public function removeElements() {
 		throw(new Exception("Not implemented"));
@@ -219,5 +207,52 @@ class SmrClient extends SmrClientBase {
 		list(, $result, $removedCount) = unpack('V2', $result->data);
 		if ($result != 0) throw(new Exception("Error in removeAllElements"));
 		return $removedCount;
+	}
+}
+
+class SmrClient_RankingBuffer {
+	public $smrClient;
+	public $rankingId;
+	protected $bufferSetElements = array();
+	protected $MAX_SET_ELEMENTS;
+	
+	public function __construct(SmrClientBase $smrClient, $rankingId) {
+		$this->smrClient = $smrClient;
+		$this->rankingId = $rankingId;
+		$this->MAX_SET_ELEMENTS = floor((pow(2, 16) - 4) / (4 * 3)) - 1;
+		//echo $this->MAX_SET_ELEMENTS; exit;
+		//$this->MAX_SET_ELEMENTS = 4095;
+	}
+	
+	public function __destruct() {
+		$this->close();
+	}
+	
+	public function close() {
+		$this->setElementBufferFlush();
+	}
+	
+	public function setElementBuffer($elementId, $score, $timestamp) {
+		$this->bufferSetElements[] = pack('V*', $elementId, $score, $timestamp);
+		if (count($this->bufferSetElements) >= $this->MAX_SET_ELEMENTS) {
+			$this->setElementBufferFlush();
+		}
+	}
+	
+	public function setElementBufferFlush() {
+		if (empty($this->bufferSetElements)) return;
+
+		$result = $this->_setElements($this->bufferSetElements);
+		$this->bufferSetElements = array();
+		return $result;
+	}
+	
+	protected function _setElements($rawInfos) {
+		assert(count($rawInfos) <= $this->MAX_SET_ELEMENTS);
+		if (count($rawInfos)) {
+			return $this->smrClient->sendPacket(SmrPacketType::SetElements, pack('V', $this->rankingId) . implode('', $rawInfos));
+		} else {
+			return false;
+		}
 	}
 }

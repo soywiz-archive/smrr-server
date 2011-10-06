@@ -23,6 +23,7 @@ namespace SimpleMassiveRealtimeRankingServer
 			{
 				string BindIp = "127.0.0.1";
 				int BindPort = 9777;
+				int NumberOfThreads = Environment.ProcessorCount;
 
 				var Getopt = new Getopt(args);
 				Getopt.AddRule("-v", () =>
@@ -32,6 +33,7 @@ namespace SimpleMassiveRealtimeRankingServer
 				});
 				Getopt.AddRule("-i", (string Value) => { BindIp = Value; });
 				Getopt.AddRule("-p", (int Value) => { BindPort = Value; });
+				Getopt.AddRule("-t", (int Value) => { NumberOfThreads = Value; });
 				Getopt.AddRule(new string[] { "-h", "-?", "--help" }, () =>
 				{
 					Console.WriteLine("Simple Massive Realtime Ranking Server - {0} - Carlos Ballesteros Velasco - 2011-2011", new ServerManager().Version);
@@ -40,6 +42,7 @@ namespace SimpleMassiveRealtimeRankingServer
 					Console.WriteLine("Parameters:");
 					Console.WriteLine("    -i    Sets the binding ip. Example: -i=192.168.1.1");
 					Console.WriteLine("    -p    Sets the binding port. Example: -p=7777");
+					Console.WriteLine("    -t    Sets the number of partition threads. Example: -t=8");
 					Console.WriteLine("");
 					Console.WriteLine("    -v    Shows the version of the server");
 					Console.WriteLine("    -h    Shows this help");
@@ -50,7 +53,7 @@ namespace SimpleMassiveRealtimeRankingServer
 				});
 				Getopt.Process();
 
-				var ServerHandler = new ServerHandler(BindIp, BindPort);
+				var ServerHandler = new ServerHandler(BindIp, BindPort, NumberOfThreads);
 				ServerHandler.ListenStart();
 				ServerHandler.AcceptClientLoop();
 				Environment.Exit(0);

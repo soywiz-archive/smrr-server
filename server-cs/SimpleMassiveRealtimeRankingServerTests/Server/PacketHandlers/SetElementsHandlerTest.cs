@@ -23,16 +23,22 @@ namespace SimpleMassiveRealtimeRankingServerTests
 
 			TestPacketHelperInstance.Handle((Stream) =>
 			{
-				var BinaryWriter = new BinaryWriter(Stream);
-				BinaryWriter.Write((int)TestIndex.IndexId); // RankingId
-				BinaryWriter.Write((uint)0); // UserId
-				BinaryWriter.Write((uint)100); // ScoreValue
-				BinaryWriter.Write((uint)1000); // ScoreTimeStamp
-
-				BinaryWriter.Write((int)TestIndex.IndexId); // RankingId
-				BinaryWriter.Write((uint)1); // UserId
-				BinaryWriter.Write((uint)150); // ScoreValue
-				BinaryWriter.Write((uint)1001); // ScoreTimeStamp
+				Stream.WriteStruct(new SetElementsHandler.RequestHeaderStruct()
+				{
+					RankingId = TestIndex.IndexId,
+				});
+				Stream.WriteStruct(new SetElementsHandler.RequestEntryStruct()
+				{
+					UserId = 0,
+					ScoreValue = 100,
+					ScoreTimeStamp = 1000,
+				});
+				Stream.WriteStruct(new SetElementsHandler.RequestEntryStruct()
+				{
+					UserId = 1,
+					ScoreValue = 150,
+					ScoreTimeStamp = 1001,
+				});
 			});
 
 			Assert.AreEqual(

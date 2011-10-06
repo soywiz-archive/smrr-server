@@ -31,6 +31,11 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 			Request = ReceivedPacket.Stream.ReadStruct<RequestStruct>();
 		}
 
+		public override int GetThreadAffinityAfterParseRequest()
+		{
+			return this.Request.RankingIndex;
+		}
+
 		public override void Execute(Packet PacketToSend)
 		{
 			var Index = ServerManager.ServerIndices[Request.RankingIndex];

@@ -20,6 +20,11 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 			Request = ReceivedPacket.Stream.ReadStruct<RequestStruct>();
 		}
 
+		public override int GetThreadAffinityAfterParseRequest()
+		{
+			return this.Request.RankingIndexId;
+		}
+
 		public override void Execute(Packet PacketToSend)
 		{
 			ServerManager.ServerIndices[Request.RankingIndexId].RemoveAllItems();

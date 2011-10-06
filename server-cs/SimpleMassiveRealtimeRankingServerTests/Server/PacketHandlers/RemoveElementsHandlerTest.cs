@@ -28,14 +28,16 @@ namespace SimpleMassiveRealtimeRankingServerTests
 
 			TestPacketHelperInstance.Handle((Stream) =>
 			{
-				Stream.WriteStruct(new RemoveElementsHandler.RequestEntryStruct()
+				Stream.WriteStruct(new RemoveElementsHandler.RequestHeaderStruct()
 				{
 					RankingIndexId = Index.IndexId,
+				});
+				Stream.WriteStruct(new RemoveElementsHandler.RequestEntryStruct()
+				{
 					UserId = 1001,
 				});
 				Stream.WriteStruct(new RemoveElementsHandler.RequestEntryStruct()
 				{
-					RankingIndexId = Index.IndexId,
 					UserId = 1003,
 				});
 			});

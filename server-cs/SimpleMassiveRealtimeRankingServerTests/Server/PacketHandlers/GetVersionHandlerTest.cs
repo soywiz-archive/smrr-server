@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using SimpleMassiveRealtimeRankingServer.Server;
 using SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers;
+using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
@@ -22,8 +23,8 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			});
 
 			Assert.AreEqual(
-				"Packet(Type=GetVersion, Data=01010000)",
-				TestPacketHelperInstance.PacketToSend.ToString()
+				new ServerManager().Version.ToString(),
+				TestPacketHelperInstance.PacketToSend.Stream.ReadStruct<ServerManager.VersionStruct>().ToString()
 			);
 		}
 	}

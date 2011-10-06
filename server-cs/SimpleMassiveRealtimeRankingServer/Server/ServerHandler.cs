@@ -14,17 +14,19 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		protected TcpListener TcpListener;
 		protected string ListenIp;
 		protected int ListenPort;
+		protected int NumberOfThreads;
 		protected ManualResetEvent ClientConnected;
 		public ManualResetEvent IsAcceptingSocketEvent;
 		public ServerManager ServerManager;
 
-		public ServerHandler(string ListenIp, int ListenPort)
+		public ServerHandler(string ListenIp, int ListenPort, int NumberOfThreads = 1)
 		{
 			this.ListenIp = ListenIp;
 			this.ListenPort = ListenPort;
+			this.NumberOfThreads = NumberOfThreads;
 			this.ClientConnected = new ManualResetEvent(false);
 			this.IsAcceptingSocketEvent = new ManualResetEvent(false);
-			this.ServerManager = new ServerManager();
+			this.ServerManager = new ServerManager(NumberOfThreads);
 		}
 
 		public void ListenStart()
@@ -33,7 +35,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			{
 				this.TcpListener = new TcpListener(IPAddress.Parse(ListenIp), ListenPort);
 				this.TcpListener.Start();
-				Console.WriteLine("Listening {0}:{1}...", ListenIp, ListenPort);
+				Console.WriteLine("Listening({0}:{1}),Threads({2})...", ListenIp, ListenPort, NumberOfThreads);
 			}
 			catch (Exception Exception)
 			{

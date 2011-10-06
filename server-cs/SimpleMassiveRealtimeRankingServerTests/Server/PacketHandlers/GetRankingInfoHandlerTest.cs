@@ -28,7 +28,7 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			});
 
 			Assert.AreEqual(
-				"ResponseStruct(Result=0,Length=1,Direction=Descending,TopScore=9999,BottomScore=9999,MaxElements=-1)",
+				"ResponseStruct(Result=0,Length=1,Direction=Descending,TopScore=9999,BottomScore=9999,MaxElements=-1,TreeHeight=-1)",
 				TestPacketHelperInstance.PacketToSend.Stream.ReadStruct<GetRankingInfoHandler.ResponseStruct>().ToStringDefault()
 			);
 		}
