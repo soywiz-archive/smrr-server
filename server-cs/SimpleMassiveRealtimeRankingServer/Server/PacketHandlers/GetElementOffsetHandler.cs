@@ -34,9 +34,19 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 		public override void Execute(Packet PacketToSend)
 		{
 			var Ranking = ServerManager.ServerIndices[Request.RankingIndex];
+			int IndexPosition = -1;
+			try
+			{
+				var UserScore = Ranking.GetUserScore(Request.UserId);
+				IndexPosition = Ranking.Tree.GetItemPosition(UserScore);
+			}
+			catch
+			{
+			}
+
 			PacketToSend.Stream.WriteStruct(new ResponseStruct()
 			{
-				IndexPosition = Ranking.Tree.GetItemPosition(Ranking.GetUserScore(Request.UserId)),
+				IndexPosition = IndexPosition,
 			});
 		}
 	}

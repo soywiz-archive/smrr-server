@@ -17,18 +17,23 @@ namespace SimpleMassiveRealtimeRankingServerTests.Server
 		[TestMethod()]
 		public void HandleDataReceivedTest()
 		{
+			var ServerManager = new ServerManager();
 			var TestTcpTestServer = TcpTestServer.Create();
-			var TestBaseClientHandler = new ClientHandler(new ServerManager(), TestTcpTestServer.LocalTcpClient);
+			var TestBaseClientHandler = new ClientHandler(ServerManager, TestTcpTestServer.LocalTcpClient);
 			TestBaseClientHandler.StartReceivingData();
+
+			var ClientClientStream = TestTcpTestServer.RemoteTcpClient.GetStream();
 
 			// Client send a GetVersion request.
 			var PacketToSend = new Packet(Packet.PacketType.GetVersion);
-			PacketToSend.WritePacketTo(TestTcpTestServer.RemoteTcpClient.GetStream());
+			PacketToSend.WritePacketTo(ClientClientStream);
+
+			Packet PacketReceived = Packet.FromStream(ClientClientStream);
 
 			// Client receives a GetVersion response from the server.
 			Assert.AreEqual(
-				"Packet(Type=GetVersion, Data=01010000)",
-				Packet.FromStream(TestTcpTestServer.RemoteTcpClient.GetStream()).ToString()
+				ServerManager.Version.ToString(),
+				PacketReceived.Stream.ReadStruct<ServerManager.VersionStruct>().ToString()
 			);
 		}
 	}

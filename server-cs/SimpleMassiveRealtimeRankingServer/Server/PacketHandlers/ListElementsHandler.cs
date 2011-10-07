@@ -45,6 +45,12 @@ namespace SimpleMassiveRealtimeRankingServer.Server.PacketHandlers
 		{
 			var RankingIndex = ServerManager.ServerIndices[Request.RankingIndexId];
 			int CurrentEntryOffset = Request.Offset;
+
+			if (Request.Offset < 0)
+			{
+				return;
+			}
+
 			foreach (var UserScore in RankingIndex.GetRange(Request.Offset, Request.Count))
 			{
 				PacketToSend.Stream.WriteStruct(new ResponseEntryStruct()

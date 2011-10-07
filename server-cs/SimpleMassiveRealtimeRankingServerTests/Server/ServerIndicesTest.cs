@@ -24,7 +24,6 @@ namespace SimpleMassiveRealtimeRankingServerTests
 				AscendingIndex = ServerIndices["+TestIndex"];
 				AscendingIndex.UpdateUserScore(UserId: 2, ScoreTimeStamp: 1000, ScoreValue: 100);
 				DescendingIndex.UpdateUserScore(UserId: 2, ScoreTimeStamp: 1000, ScoreValue: 100);
-
 			}
 
 			[TestMethod]
@@ -125,6 +124,20 @@ namespace SimpleMassiveRealtimeRankingServerTests
 				Assert.AreEqual(
 					"User(UserId:777, ScoreTimeStamp:1000, ScoreValue:150)",
 					DescendingIndex.GetUserScore(UserId: TestUserId).ToString()
+				);
+			}
+
+			[TestMethod]
+			public void ExceedCappedCollection()
+			{
+				var CappedIndex = ServerIndices["-TestIndex@0:2"];
+				CappedIndex.UpdateUserScore(UserId: 1, ScoreTimeStamp: 1000, ScoreValue: 100);
+				CappedIndex.UpdateUserScore(UserId: 2, ScoreTimeStamp: 1000, ScoreValue: 200);
+				CappedIndex.UpdateUserScore(UserId: 3, ScoreTimeStamp: 1000, ScoreValue: 300);
+				CappedIndex.UpdateUserScore(UserId: 4, ScoreTimeStamp: 1000, ScoreValue: 150);
+				Assert.AreEqual(
+					"3,2",
+					CappedIndex.GetRange(0, 1000).Select(Item => Item.UserId).ToStringArray()
 				);
 			}
 		}

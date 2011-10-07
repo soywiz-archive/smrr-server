@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using CSharpUtils.Containers.RedBlackTree;
 using CSharpUtils.Extensions;
+using System.Text.RegularExpressions;
 
 namespace SimpleMassiveRealtimeRankingServer.Server
 {
@@ -56,6 +57,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			internal SortingDirection SortingDirection = SortingDirection.Invalid;
 			internal Dictionary<uint, UserScore> UserScoresByUserId;
 			internal RedBlackTreeWithStats<UserScore> Tree;
+			public int CappedCount = -1;
 
 			public UserScoreIndex(int IndexId, SortingDirection SortingDirection)
 			{
@@ -120,6 +122,16 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 					this.Tree.Add(UserScore);
 				}
 
+				if (this.CappedCount > -1)
+				{
+					while (this.UserScoresByUserId.Count > this.CappedCount)
+					{
+						// Not synchronized for performance!
+						this.UserScoresByUserId.Remove(this.Tree.BackElement.UserId);
+						this.Tree.RemoveBack();
+					}
+				}
+
 				return UserScore;
 			}
 
@@ -155,11 +167,33 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 					return Indices[IndiceIdsByName.GetOrCreate(IndexName, () =>
 					{
 						SortingDirection SortingDirection = SortingDirection.Invalid;
-						if (IndexName[0] == '+') SortingDirection = SortingDirection.Ascending;
-						if (IndexName[0] == '-') SortingDirection = SortingDirection.Descending;
+						var IndexNameMatch = new Regex(@"^([\+\-])[^:]+(:(\d+))?$", RegexOptions.Compiled).Match(IndexName);
+						if (!IndexNameMatch.Success) throw(new Exception("Invalid Index Name '" + IndexName + "'"));
+						var DirectionString = IndexNameMatch.Groups[1].Value;
+						var CappedCountString = IndexNameMatch.Groups[3].Value;
+						int CappedCount = -1;
+
+						if (DirectionString == "+") SortingDirection = SortingDirection.Ascending;
+						if (DirectionString == "-") SortingDirection = SortingDirection.Descending;
+						if (CappedCountString.Length > 0)
+						{
+							CappedCount = int.Parse(CappedCountString);
+						}
+
 						if (SortingDirection == SortingDirection.Invalid) throw(new Exception("The index must be called '-IndexName' or '+IndexName' wether is a descending index or ascending index."));
 						var Index = new UserScoreIndex(Indices.Count, SortingDirection);
+						Index.CappedCount = CappedCount;
+						//Index.Tree.CappedToNumberOfElements = CappedCount;
 						Indices.Add(Index);
+
+						Console.WriteLine(
+							"Created Indexd: '{0}' :: IndexId({1}), Direction({2}), CappedCount({3})",
+							IndexName,
+							Index.IndexId,
+							Enum.GetName(typeof(SortingDirection), SortingDirection),
+							CappedCount
+						);
+
 						return Index.IndexId;
 					})];
 				}
