@@ -30,18 +30,25 @@ for ($m = 0; $m < $NumberOfIndexes; $m++) {
 
 	//var_dump($SmrClient->setRanking(0, SmrClientDirection::Ascending, 10000000));
 
-	for ($n = 0; $n < $NumberOfEntriesToAddPerIndex; $n++) {
-	//for ($n = 0; $n < 1000; $n++) {
-	//for ($n = 0; $n < 100; $n++) {
-	//for ($n = 0; $n < 20; $n++) {
-		$SmrClient->setElementBuffer($Index, $n, mt_rand(0, 500), $time + mt_rand(-50, 4));
-	}
+	$start = microtime(true);
+	{
+		for ($n = 0; $n < $NumberOfEntriesToAddPerIndex; $n++) {
+		//for ($n = 0; $n < 1000; $n++) {
+		//for ($n = 0; $n < 100; $n++) {
+		//for ($n = 0; $n < 20; $n++) {
+			$SmrClient->setElementBuffer($Index, $n, mt_rand(0, 500), $time + mt_rand(-50, 4));
+		}
 
-	$SmrClient->setElementBuffer($Index, 1000, 200, $time);
-	$SmrClient->setElementBuffer($Index, 1001, 300, $time);
-	$SmrClient->setElementBuffer($Index, 1000, 300, $time + 1);
+		$SmrClient->setElementBuffer($Index, 1000, 200, $time);
+		$SmrClient->setElementBuffer($Index, 1001, 300, $time);
+		$SmrClient->setElementBuffer($Index, 1000, 300, $time + 1);
+		$SmrClient->setElementBufferFlush($Index);
+	}
+	$end = microtime(true);
+	printf("    %f\n", $end - $start);
 	//$SmrClient->setElementBufferFlush();
 
+	/*
 	printf("Position(1000):%d\n", $pos_1000 = $SmrClient->getElementOffset($Index, 1000));
 	print_r($SmrClient->listElements($Index, $pos_1000, 3));
 
@@ -56,6 +63,7 @@ for ($m = 0; $m < $NumberOfIndexes; $m++) {
 	//print_r($SmrClient->listItems(0, 20, 20));
 
 	print_r($SmrClient->getRankingInfo($Index));
+	*/
 }
 
 

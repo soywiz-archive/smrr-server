@@ -52,6 +52,8 @@ class SmrPacket {
 
 class SmrClientBase {
 	public $f;
+	private $packetsSended = 0;
+	private $packetsSent = 0;
 
 	public function __construct() {
 	}
@@ -62,6 +64,8 @@ class SmrClientBase {
 
 	public function connect($ip, $port) {
 		$this->f = fsockopen($ip, $port);
+		$this->packetsSended = 0;
+		$this->packetsSent = 0;
 		if (!$this->f) throw(new Exception("Can't connect to {$ip}:{$port}"));
 	}
 
@@ -70,27 +74,23 @@ class SmrClientBase {
 		$this->f = null;
 	}
 
-	public function sendPacket($type, $data = '') {
+	public function _sendPacket($type, $data = '') {
 		$data_len = strlen($data);
 		if ($data_len > 65535) throw(new Exception("Packet is too big '" . $data_len . "'"));
-		$start = microtime(true);
-		{
-			fwrite($this->f, pack('v', strlen($data)));
-			fwrite($this->f, pack('c', $type));
-			fwrite($this->f, $data);
+		fwrite($this->f, pack('v', strlen($data)));
+		fwrite($this->f, pack('c', $type));
+		fwrite($this->f, $data);
 
-			$response = $this->recvPacket();
+		$this->packetsSent++;
+	}
+	
+	public function _recvAllPacketsToSkip() {	
+		while ($this->packetsReceived < $this->packetsSent) {
+			$response = $this->_recvPacket();
 		}
-		$end = microtime(true);
-
-		if ($response->type != $type) throw(new Exception("Mismatch response packet type"));
-
-		//printf("%.6f\n", $end - $start);
-
-		return $response;
 	}
 
-	public function recvPacket() {
+	public function _recvPacket() {
 		//echo "[@0:.]";
 		list(,$packetSize) = unpack('v', $v = fread($this->f, 2));
 		if (strlen($v) < 2) throw(new Exception("Error receiving a SmrPacket"));
@@ -100,7 +100,30 @@ class SmrClientBase {
 		$packetData = ($packetSize > 0) ? fread($this->f, $packetSize) : '';
 		//echo "[@3:{$packetData}]";
 
+		$this->packetsReceived++;
+		//printf("    RECV(recv:%d/sent:%d)\n", $this->packetsReceived, $this->packetsSent);
+
 		return new SmrPacket($SmrPacketType, $packetData);
+	}
+	
+	public function sendPacket($type, $data = '') {
+		$start = microtime(true);
+		{
+			$this->_recvAllPacketsToSkip();
+			$this->_sendPacket($type, $data);
+			$response = $this->_recvPacket();
+			//echo "Recv ({$response->type})!\n";
+		}
+		$end = microtime(true);
+
+		if ($response->type != $type) {
+			print_r(stream_get_meta_data($this->f));
+			throw(new Exception("Mismatch response packet type (Response({$response->type}) != Expected({$type}))"));
+		}
+
+		//printf("%.6f\n", $end - $start);
+
+		return $response;
 	}
 }
 
@@ -190,6 +213,11 @@ class SmrClient extends SmrClientBase {
 		return $entries;
 	}
 	
+	public function setElementBufferFlush($rankingName) {
+		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
+		$this->_setElementBufferFlush($rankingIndex);
+	}
+	
 	protected function _setElementBufferFlush($rankingIndex) {
 		$buffer = &$this->bufferSetElements[$rankingIndex];
 		if (isset($buffer)) {
@@ -220,8 +248,6 @@ class SmrClient_RankingBuffer {
 		$this->smrClient = $smrClient;
 		$this->rankingId = $rankingId;
 		$this->MAX_SET_ELEMENTS = floor((pow(2, 16) - 4) / (4 * 3)) - 1;
-		//echo $this->MAX_SET_ELEMENTS; exit;
-		//$this->MAX_SET_ELEMENTS = 4095;
 	}
 	
 	public function __destruct() {
@@ -250,7 +276,8 @@ class SmrClient_RankingBuffer {
 	protected function _setElements($rawInfos) {
 		assert(count($rawInfos) <= $this->MAX_SET_ELEMENTS);
 		if (count($rawInfos)) {
-			return $this->smrClient->sendPacket(SmrPacketType::SetElements, pack('V', $this->rankingId) . implode('', $rawInfos));
+			$this->smrClient->_sendPacket(SmrPacketType::SetElements, pack('V', $this->rankingId) . implode('', $rawInfos));
+			return true;
 		} else {
 			return false;
 		}
