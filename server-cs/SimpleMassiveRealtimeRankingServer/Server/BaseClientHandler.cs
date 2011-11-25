@@ -60,7 +60,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			{
 				var PeekData = DataBuffer.ConsumePeek(3);
 				var PacketSize = PeekData[0] | (PeekData[1] << 8);
-				var PacketType = (Packet.PacketType)PeekData[2];
+				var PacketType = (PacketType)PeekData[2];
 				var RealPacketSize = 2 + 1 + PacketSize;
 
 				//Console.WriteLine("RealPacketSize={0}", RealPacketSize);

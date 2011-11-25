@@ -31,31 +31,31 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
 			switch (ReceivedPacket.Type)
 			{
-				case Packet.PacketType.GetElementOffset:
+				case PacketType.GetElementOffset:
 					PacketHandler = new GetElementOffsetHandler();
 					break;
-				case Packet.PacketType.GetRankingIdByName:
+				case PacketType.GetRankingIdByName:
 					PacketHandler = new GetRankingIdByNameHandler();
 					break;
-				case Packet.PacketType.GetRankingInfo:
+				case PacketType.GetRankingInfo:
 					PacketHandler = new GetRankingInfoHandler();
 					break;
-				case Packet.PacketType.GetVersion:
+				case PacketType.GetVersion:
 					PacketHandler = new GetVersionHandler();
 					break;
-				case Packet.PacketType.ListElements:
+				case PacketType.ListElements:
 					PacketHandler = new ListElementsHandler();
 					break;
-				case Packet.PacketType.Ping:
+				case PacketType.Ping:
 					PacketHandler = new PingHandler();
 					break;
-				case Packet.PacketType.RemoveAllElements:
+				case PacketType.RemoveAllElements:
 					PacketHandler = new RemoveAllElementsHandler();
 					break;
-				case Packet.PacketType.RemoveElements:
+				case PacketType.RemoveElements:
 					PacketHandler = new RemoveElementsHandler();
 					break;
-				case Packet.PacketType.SetElements:
+				case PacketType.SetElements:
 					PacketHandler = new SetElementsHandler();
 					break;
 				default:

@@ -6,6 +6,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Net.NetworkInformation;
+using System.Threading.Tasks;
+using System.IO;
+using CSharpUtils;
 
 namespace SimpleMassiveRealtimeRankingServer.Server
 {
@@ -49,35 +52,64 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			this.TcpListener.Stop();
 		}
 
-		public void AcceptClientLoop()
+		public async Task AcceptClientLoopAsync()
 		{
 			while (true)
 			{
-				AcceptClient();
+				HandleClientAsync(await this.TcpListener.AcceptTcpClientAsync());
 			}
 		}
 
-		public void AcceptClient()
+		public async Task HandleClientAsync(TcpClient Client)
 		{
-			if (this.TcpListener == null)
+			Console.WriteLine("HandleClientAsync");
+			var ClientStream = Client.GetStream();
+
+			while (Client.Connected)
 			{
-				//this.ListenStart();
-				throw(new MethodAccessException("Can't call AcceptClient without calling ListenStart first"));
+				// Read Packet Header (Size + Type)
+				var PacketHeader = new byte[3];
+				await ClientStream.ReadExactAsync(PacketHeader, 0, 3);
+
+				// Parse Packet Header
+				var PacketSize = BitConverter.ToUInt16(PacketHeader, 0);
+				var PacketType = (PacketType)PacketHeader[2];
+
+				// Read Packet Content
+				var PacketBody = new byte[PacketSize];
+				await ClientStream.ReadExactAsync(PacketBody, 0, PacketBody.Length);
+
+				// Handle Packet
+				await HandlePacket(Client, ClientStream, PacketType, PacketBody);
+			}
+		}
+
+		public async Task HandlePacket(TcpClient Client, Stream ClientStream, PacketType Type, byte[] RequestContent)
+		{
+			Console.WriteLine("Handle Packet: {0}, {1}", RequestContent.Length, Type);
+
+			byte[] ResponseHeader = new byte[3];
+			byte[] ResponseContent = null;
+
+			switch (Type)
+			{
+				case PacketType.GetVersion:
+				{
+					ResponseContent = StructUtils.StructToBytes(ServerManager.Version);
+				}
+				break;
+				case PacketType.GetElementOffset:
+				{
+
+				}
+				break;
+				default: throw(new NotImplementedException("Can't handle packet '" + Type + "'"));
 			}
 
-			Console.WriteLine("Waiting for a connection...");
-			ClientConnected.Reset();
-			IsAcceptingSocketEvent.Reset();
-			this.TcpListener.BeginAcceptTcpClient((AcceptState) =>
-			{
-				var AcceptedTcpClient = (AcceptState.AsyncState as TcpListener).EndAcceptTcpClient(AcceptState);
-				var ClientHandler = new ClientHandler(ServerManager, AcceptedTcpClient);
-				ClientHandler.StartReceivingData();
-
-				ClientConnected.Set();
-			}, this.TcpListener);
-			IsAcceptingSocketEvent.Set();
-			ClientConnected.WaitOne();
+			Array.Copy(BitConverter.GetBytes(ResponseContent.Length), ResponseHeader, 2);
+			ResponseHeader[2] = (byte)Type;
+			await ClientStream.WriteAsync(ResponseHeader, 0, ResponseHeader.Length);
+			await ClientStream.WriteAsync(ResponseContent, 0, ResponseContent.Length);
 		}
 	}
 }

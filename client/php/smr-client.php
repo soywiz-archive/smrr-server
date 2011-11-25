@@ -54,6 +54,7 @@ class SmrClientBase {
 	public $f;
 	private $packetsSended = 0;
 	private $packetsSent = 0;
+	private $packetsReceived = 0;
 
 	public function __construct() {
 	}
@@ -83,8 +84,8 @@ class SmrClientBase {
 
 		$this->packetsSent++;
 	}
-	
-	public function _recvAllPacketsToSkip() {	
+
+	public function _recvAllPacketsToSkip() {
 		while ($this->packetsReceived < $this->packetsSent) {
 			$response = $this->_recvPacket();
 		}
@@ -105,7 +106,7 @@ class SmrClientBase {
 
 		return new SmrPacket($SmrPacketType, $packetData);
 	}
-	
+
 	public function sendPacket($type, $data = '') {
 		$start = microtime(true);
 		{
@@ -203,21 +204,23 @@ class SmrClient extends SmrClientBase {
 		$entries = array();
 
 		$data = $result->data;
+		
+		//echo strlen($data) . "\n";
 
 		while (strlen($data)) {
-			$entry = array_combine(array('position', 'elementId', 'score', 'timestamp'), array_values(unpack('V4', $data)));
+			$entry = array_combine(array('position', 'elementId', 'score', 'timestamp'), array_values(unpack('V4', substr($data, 0, 4 * 4))));
 			$data = substr($data, 4 * 4);
 			$entries[] = $entry;
 		}
 
 		return $entries;
 	}
-	
+
 	public function setElementBufferFlush($rankingName) {
 		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
 		$this->_setElementBufferFlush($rankingIndex);
 	}
-	
+
 	protected function _setElementBufferFlush($rankingIndex) {
 		$buffer = &$this->bufferSetElements[$rankingIndex];
 		if (isset($buffer)) {
@@ -243,28 +246,28 @@ class SmrClient_RankingBuffer {
 	public $rankingId;
 	protected $bufferSetElements = array();
 	protected $MAX_SET_ELEMENTS;
-	
+
 	public function __construct(SmrClientBase $smrClient, $rankingId) {
 		$this->smrClient = $smrClient;
 		$this->rankingId = $rankingId;
 		$this->MAX_SET_ELEMENTS = floor((pow(2, 16) - 4) / (4 * 3)) - 1;
 	}
-	
+
 	public function __destruct() {
 		$this->close();
 	}
-	
+
 	public function close() {
 		$this->setElementBufferFlush();
 	}
-	
+
 	public function setElementBuffer($elementId, $score, $timestamp) {
 		$this->bufferSetElements[] = pack('V*', $elementId, $score, $timestamp);
 		if (count($this->bufferSetElements) >= $this->MAX_SET_ELEMENTS) {
 			$this->setElementBufferFlush();
 		}
 	}
-	
+
 	public function setElementBufferFlush() {
 		if (empty($this->bufferSetElements)) return;
 
@@ -272,7 +275,7 @@ class SmrClient_RankingBuffer {
 		$this->bufferSetElements = array();
 		return $result;
 	}
-	
+
 	protected function _setElements($rawInfos) {
 		assert(count($rawInfos) <= $this->MAX_SET_ELEMENTS);
 		if (count($rawInfos)) {

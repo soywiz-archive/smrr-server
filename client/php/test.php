@@ -15,13 +15,27 @@ $STRESS = true;
 
 if ($STRESS) {
 	$NumberOfIndexes = 100;
-	$NumberOfEntriesPerIndexCapped = 10000;
+	$NumberOfEntriesPerIndexCapped = 50000;
 	$NumberOfEntriesToAddPerIndex  = 100000;
 } else {
 	$NumberOfIndexes = 1;
 	$NumberOfEntriesPerIndexCapped = 10000;
 	$NumberOfEntriesToAddPerIndex  = 10;
 }
+
+for ($m = 0; $m < 10; $m++) {
+	$Index = $SmrClient->getRankingIdByName('-Index@' . $m . ':' . $NumberOfEntriesPerIndexCapped);
+	$start = microtime(true);
+	for ($n = 0; $n < 2000; $n++) {
+		echo "$n\n";
+		$list = $SmrClient->listElements($Index, 0, 10);
+		print_r($list);
+	}
+	$end = microtime(true);
+	printf("    %f\n", $end - $start);
+}
+
+exit;
 
 for ($m = 0; $m < $NumberOfIndexes; $m++) {
 	$Index = $SmrClient->getRankingIdByName('-Index@' . $m . ':' . $NumberOfEntriesPerIndexCapped);
