@@ -6,7 +6,7 @@ using CSharpUtils.Threading;
 
 namespace SimpleMassiveRealtimeRankingServer.Server
 {
-	public class ServerManager
+	unsafe public class ServerManager
 	{
 		public CustomThreadPool CustomThreadPool;
 
@@ -47,6 +47,16 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		}
 
 		public ServerIndices ServerIndices = new ServerIndices();
+
+        public byte[] VersionAsArray()
+        {
+            var Version = this.Version;
+            var Data = (byte*)&Version;
+            var Size = sizeof(ServerManager.VersionStruct);
+            var ResponseContent = new byte[Size];
+            for (int n = 0; n < Size; n++) ResponseContent[n] = Data[n];
+            return ResponseContent;
+        }
 
 		public VersionStruct Version
 		{

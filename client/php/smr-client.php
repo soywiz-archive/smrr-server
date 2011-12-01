@@ -78,9 +78,12 @@ class SmrClientBase {
 	public function _sendPacket($type, $data = '') {
 		$data_len = strlen($data);
 		if ($data_len > 65535) throw(new Exception("Packet is too big '" . $data_len . "'"));
+		/*
 		fwrite($this->f, pack('v', strlen($data)));
 		fwrite($this->f, pack('c', $type));
 		fwrite($this->f, $data);
+		*/
+		fwrite($this->f, pack('v', strlen($data)) . pack('c', $type) . $data);
 
 		$this->packetsSent++;
 	}
@@ -92,11 +95,13 @@ class SmrClientBase {
 	}
 
 	public function _recvPacket() {
-		//echo "[@0:.]";
-		list(,$packetSize) = unpack('v', $v = fread($this->f, 2));
-		if (strlen($v) < 2) throw(new Exception("Error receiving a SmrPacket"));
+		$v = fread($this->f, 3);
+		
+		list(,$packetSize) = unpack('v', substr($v, 0, 2));
+		list(,$SmrPacketType) = unpack('c', substr($v, 2, 1));
+		if (strlen($v) < 3) throw(new Exception("Error receiving a SmrPacket"));
 		//echo "[@1:{$packetSize}]";
-		list(,$SmrPacketType) = unpack('c', fread($this->f, 1));
+		//list(,$SmrPacketType) = unpack('c', fread($this->f, 1));
 		//echo "[@2:{$SmrPacketType}]";
 		$packetData = ($packetSize > 0) ? fread($this->f, $packetSize) : '';
 		//echo "[@3:{$packetData}]";

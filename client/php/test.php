@@ -8,6 +8,18 @@ $time = time();
 
 //$SmrClient->removeAllElements(0);
 
+/*
+$start = microtime(true);
+//for ($n = 0; $n < 30000; $n++) {
+//for ($n = 0; $n < 10000; $n++) {
+for ($n = 0; $n < 1000; $n++) {
+//for ($n = 0; $n < 1; $n++) {
+	$SmrClient->getVersion();	
+}
+$end = microtime(true);
+printf("Time: %.4f\n", $end - $start);
+exit;
+*/
 printf("Version: %s\n", $SmrClient->getVersion());
 
 $STRESS = true;
@@ -23,6 +35,17 @@ if ($STRESS) {
 	$NumberOfEntriesToAddPerIndex  = 10;
 }
 
+for ($m = 0; $m < 2000; $m++) {
+	$Index = $SmrClient->getRankingIdByName('-Index@' . $m . ':' . $NumberOfEntriesPerIndexCapped);
+	//$info = $SmrClient->getRankingInfo($Index);
+	$list = $SmrClient->listElements($Index, 40000, 100);
+	//echo $SmrClient->getElementOffset($Index, 34826) . "\n";
+	//print_r($list);
+	//print_r($info);
+}
+exit;
+
+/*
 for ($m = 0; $m < 10; $m++) {
 	$Index = $SmrClient->getRankingIdByName('-Index@' . $m . ':' . $NumberOfEntriesPerIndexCapped);
 	$start = microtime(true);
@@ -36,6 +59,7 @@ for ($m = 0; $m < 10; $m++) {
 }
 
 exit;
+*/
 
 for ($m = 0; $m < $NumberOfIndexes; $m++) {
 	$Index = $SmrClient->getRankingIdByName('-Index@' . $m . ':' . $NumberOfEntriesPerIndexCapped);

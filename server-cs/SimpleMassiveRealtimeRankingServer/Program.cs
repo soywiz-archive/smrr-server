@@ -22,7 +22,7 @@ namespace SimpleMassiveRealtimeRankingServer
 			try
 			{
 				string BindIp = "0.0.0.0";
-				int BindPort = 9771;
+				int BindPort = 9777;
 				int NumberOfThreads = Environment.ProcessorCount;
 
 				var Getopt = new Getopt(args);
@@ -54,11 +54,7 @@ namespace SimpleMassiveRealtimeRankingServer
 				Getopt.Process();
 
 				var ServerHandler = new ServerHandler(BindIp, BindPort, NumberOfThreads);
-				ServerHandler.ListenStart();
-				//ServerHandler.AcceptClientLoop();
-				ServerHandler.AcceptClientLoopAsync();
-				while (true) Thread.Sleep(int.MaxValue);
-				Environment.Exit(0);
+				ServerHandler.AcceptClientLoopAsync().Wait();
 			}
 			catch (Exception Exception)
 			{

@@ -9,10 +9,11 @@ using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using System.IO;
 using CSharpUtils;
+using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServer.Server
 {
-	public class ServerHandler
+	public partial class ServerHandler
 	{
 		protected TcpListener TcpListener;
 		protected string ListenIp;
@@ -21,6 +22,17 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		protected ManualResetEvent ClientConnected;
 		public ManualResetEvent IsAcceptingSocketEvent;
 		public ServerManager ServerManager;
+        public TaskFactory[] TaskFactories;
+
+        protected async Task EnqueueTask(uint Seed, Action Action)
+        {
+            await TaskFactories[Seed % TaskFactories.Length].StartNew(Action);
+        }
+
+        protected async Task<TResult> EnqueueTask<TResult>(uint Seed, Func<TResult> Action)
+        {
+            return await TaskFactories[Seed % TaskFactories.Length].StartNew<TResult>(Action);
+        }
 
 		public ServerHandler(string ListenIp, int ListenPort, int NumberOfThreads = 1)
 		{
@@ -30,86 +42,164 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			this.ClientConnected = new ManualResetEvent(false);
 			this.IsAcceptingSocketEvent = new ManualResetEvent(false);
 			this.ServerManager = new ServerManager(NumberOfThreads);
+            TaskFactories = new TaskFactory[NumberOfThreads];
+            for (int n = 0; n < TaskFactories.Length; n++) TaskFactories[n] = new TaskFactory();
 		}
 
-		public void ListenStart()
-		{
-			try
-			{
-				this.TcpListener = new TcpListener(IPAddress.Parse(ListenIp), ListenPort);
-				this.TcpListener.Start();
-				Console.WriteLine("Listening({0}:{1}),Threads({2})...", ListenIp, ListenPort, NumberOfThreads);
-			}
-			catch (Exception Exception)
-			{
-				Console.WriteLine("Can't listen to {0}:{1}...", ListenIp, ListenPort);
-				throw (Exception);
-			}
-		}
-
-		public void ListenStop()
-		{
-			this.TcpListener.Stop();
-		}
+        protected async Task WriteLineAsync(string Text, params object[] Params)
+        {
+            //await Console.Out.WriteLineAsync(String.Format(Text, Params));
+            //await Console.Out.FlushAsync();
+            Console.WriteLine(Text, Params);
+        }
 
 		public async Task AcceptClientLoopAsync()
 		{
-			while (true)
-			{
-				HandleClientAsync(await this.TcpListener.AcceptTcpClientAsync());
-			}
+            try
+            {
+                this.TcpListener = new TcpListener(IPAddress.Parse(ListenIp), ListenPort);
+                //this.TcpListener.Server.NoDelay = true;
+                this.TcpListener.Start();
+                await WriteLineAsync("AcceptClientLoopAsync: Listening({0}:{1}),Threads({2})...", ListenIp, ListenPort, NumberOfThreads);
+                while (true)
+                {
+                    var TcpClient = await this.TcpListener.AcceptTcpClientAsync();
+                    HandleClientAsync(TcpClient);
+                }
+            }
+            catch (Exception Exception)
+            {
+                Console.WriteLine(Exception);
+            }
+            finally
+            {
+                this.TcpListener.Stop();
+            }
 		}
 
 		public async Task HandleClientAsync(TcpClient Client)
 		{
-			Console.WriteLine("HandleClientAsync");
+            await WriteLineAsync("HandleClientAsync");
 			var ClientStream = Client.GetStream();
 
-			while (Client.Connected)
-			{
-				// Read Packet Header (Size + Type)
-				var PacketHeader = new byte[3];
-				await ClientStream.ReadExactAsync(PacketHeader, 0, 3);
+            Exception RethrowException = null;
 
-				// Parse Packet Header
-				var PacketSize = BitConverter.ToUInt16(PacketHeader, 0);
-				var PacketType = (PacketType)PacketHeader[2];
+            var Start = DateTime.Now;
+            try
+            {
+                while (Client.Connected)
+                {
+                    //Console.Write("a");
+                    // Read Packet Header (Size + Type)
+                    var PacketHeader = new byte[3];
+                    if (await ClientStream.ReadExactAsync(PacketHeader, 0, 3) != 3)
+                    {
+                        break;
+                    }
 
-				// Read Packet Content
-				var PacketBody = new byte[PacketSize];
-				await ClientStream.ReadExactAsync(PacketBody, 0, PacketBody.Length);
+                    // Parse Packet Header
+                    var PacketSize = (ushort)((PacketHeader[1] << 8) | PacketHeader[0]);
+                    var PacketType = (PacketType)PacketHeader[2];
 
-				// Handle Packet
-				await HandlePacket(Client, ClientStream, PacketType, PacketBody);
-			}
+                    //Console.WriteLine("Started Packet: {0}", PacketType);
+
+                    // Read Packet Content
+                    var PacketBody = new byte[PacketSize];
+                    if (await ClientStream.ReadExactAsync(PacketBody, 0, PacketBody.Length) != PacketBody.Length)
+                    {
+                        //Console.WriteLine("Medio");
+                        break;
+                    }
+
+                    //Console.WriteLine("End Packet: {0}", PacketType);
+
+                    // Handle Packet
+                    await HandlePacket(Client, ClientStream, PacketType, PacketBody);
+                }
+            }
+            catch (Exception Exception)
+            {
+                Console.WriteLine(Exception);
+                Client.Close();
+                RethrowException = Exception;
+            }
+            //finally
+            //{
+                var End = DateTime.Now;
+                await WriteLineAsync("{0}", End - Start);
+            //}
+            if (RethrowException != null) throw (RethrowException);
 		}
 
 		public async Task HandlePacket(TcpClient Client, Stream ClientStream, PacketType Type, byte[] RequestContent)
 		{
-			Console.WriteLine("Handle Packet: {0}, {1}", RequestContent.Length, Type);
+			//await WriteLineAsync("Handle Packet: {0}, {1}", RequestContent.Length, Type);
+            byte[] ResponseContent = new byte[0];
 
-			byte[] ResponseHeader = new byte[3];
-			byte[] ResponseContent = null;
+            switch (Type)
+            {
+                case PacketType.GetElementOffset:
+                    {
+                        ResponseContent = await HandlePacket_GetElementOffset(RequestContent);
+                    }
+                    break;
+                case PacketType.GetRankingIdByName:
+                    {
+                        ResponseContent = await HandlePacket_GetRankingIdByName(RequestContent);
+                    }
+                    break;
+                case PacketType.GetRankingInfo:
+                    {
+                        ResponseContent = await HandlePacket_GetRankingInfo(RequestContent);
+                    }
+                    break;
+                case PacketType.GetVersion:
+                    {
+                        ResponseContent = await HandlePacket_GetVersion(RequestContent);
+                    }
+                    break;
+                case PacketType.ListElements:
+                    {
+                        ResponseContent = await HandlePacket_ListElements(RequestContent);
+                    }
+                    break;
+                case PacketType.Ping:
+                    {
+                        ResponseContent = await HandlePacket_Ping(RequestContent);
+                    }
+                    break;
+                case PacketType.RemoveAllElements:
+                    {
+                        ResponseContent = await HandlePacket_RemoveAllElements(RequestContent);
+                    }
+                    break;
+                case PacketType.RemoveElements:
+                    {
+                        ResponseContent = await HandlePacket_RemoveElements(RequestContent);
+                    }
+                    break;
+                case PacketType.SetElements:
+                    {
+                        ResponseContent = await HandlePacket_SetElements(RequestContent);
+                    }
+                    break;
+                default:
+                    Console.WriteLine("Can't handle packet '{0}'", Type);
+                    throw (new NotImplementedException("Can't handle packet '" + Type + "'"));
+            }
 
-			switch (Type)
-			{
-				case PacketType.GetVersion:
-				{
-					ResponseContent = StructUtils.StructToBytes(ServerManager.Version);
-				}
-				break;
-				case PacketType.GetElementOffset:
-				{
+            var ResponseHeader = new byte[3];
+            ResponseHeader[0] = (byte)(ResponseContent.Length >> 0);
+            ResponseHeader[1] = (byte)(ResponseContent.Length >> 8);
+            ResponseHeader[2] = (byte)(Type);
 
-				}
-				break;
-				default: throw(new NotImplementedException("Can't handle packet '" + Type + "'"));
-			}
+            //await ClientStream.WriteAsync(ResponseHeader, 0, ResponseHeader.Length);
+            //await ClientStream.WriteAsync(ResponseContent, 0, ResponseContent.Length);
+            var Result = ResponseHeader.Concat(ResponseContent);
+            await ClientStream.WriteAsync(Result, 0, Result.Length);
+            await ClientStream.FlushAsync();
 
-			Array.Copy(BitConverter.GetBytes(ResponseContent.Length), ResponseHeader, 2);
-			ResponseHeader[2] = (byte)Type;
-			await ClientStream.WriteAsync(ResponseHeader, 0, ResponseHeader.Length);
-			await ClientStream.WriteAsync(ResponseContent, 0, ResponseContent.Length);
+            //Console.WriteLine("Flushed ResponseHeader");
 		}
 	}
 }
