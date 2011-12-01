@@ -35,6 +35,7 @@ if ($STRESS) {
 	$NumberOfEntriesToAddPerIndex  = 10;
 }
 
+/*
 for ($m = 0; $m < 2000; $m++) {
 	$Index = $SmrClient->getRankingIdByName('-Index@' . $m . ':' . $NumberOfEntriesPerIndexCapped);
 	//$info = $SmrClient->getRankingInfo($Index);
@@ -44,6 +45,7 @@ for ($m = 0; $m < 2000; $m++) {
 	//print_r($info);
 }
 exit;
+*/
 
 /*
 for ($m = 0; $m < 10; $m++) {

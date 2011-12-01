@@ -99,7 +99,15 @@ $server->start();
 	$client->setElementBuffer($index, $elementId = 1000, $score = 300, $timestamp = $time + 2);
 	$client->setElementBuffer($index, $elementId = 1002, $score = 200, $timestamp = $time + 1);
 	$client->setElementBuffer($index, $elementId = 1003, $score = 100, $timestamp = $time + 1);
+	
+	$client->setElementBuffer($index, $elementId = 1000, $score = 300, $timestamp = $time + 2);
+	
+	//$client->setElementBuffer($index, $elementId = 1000, $score = 10000, $timestamp = $time + 100);
+	
+	//print_r($client->listElements($index, $offset = 0, $count = 10)); exit;
+	
 	$client->setElementBufferFlush($index);
+	
 	assertAreEqual(
 		array(
 			'treeHeight' => -1,
@@ -163,7 +171,14 @@ $server->start();
 		),
 		$client->listElements($index, $offset = -1, $count = 10)
 	);
+
+	assertAreEqual(
+		2,
+		$client->getElementOffset($index, 1002)
+	);
+
 	assertAreEqual(4, $client->removeAllElements($index), 'removeAllElements');
+	
 	assertAreEqual(
 		array(
 		),
