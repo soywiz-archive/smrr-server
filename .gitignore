@@ -4,3 +4,5 @@
 /server-cs/SimpleMassiveRealtimeRankingServerTests/obj
 /server-cs/TestResults
 /server-cs/SimpleMassiveRealtimeRankingServerTests/bin
+/client/php/CSharpUtils.dll
+/client/php/smrr_integration_test.exe

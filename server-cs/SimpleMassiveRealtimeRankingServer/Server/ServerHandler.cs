@@ -74,6 +74,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             finally
             {
                 this.TcpListener.Stop();
+                Environment.Exit(-1);
             }
 		}
 
