@@ -48,27 +48,35 @@ div.section {
 
 <h1>SMR-SERVER - Simple Massive Ranking Server</h1>
 
+<p>Version 0.9.99-beta</p>
+
 <p>
-Very fast and simple server to handle massive rankings. It handles volatile data, so it has to be populated on every start.
+Very fast and simple server to handle massive rankings.
+It handles volatile data, so it has to be populated on every start.
 In the future it will have a file memory-mapped to disk.
+</p>
+<p>
+Server is made using C# .NET 4.5. It can be executed on linux using mono &gt;= 2.11.
 </p>
 <p>
 The server itself is very fast because:
 </p>
 <ul>
-	<li>It uses only volatile data without any disk intervention. So if all its data fits in ram, it will be fast as hell.</li>
+	<li>It just uses volatile data without any disk intervention. So if all its data fits in RAM, it will be fast as hell. RAM nowadays is very cheap and fast.</li>
 	<li>Each operation in the server is performed on O(log()) time.</li>
 	<li>It has an optimized binary protocol for server-client communication.</li>
-	<li>Single threaded with asynchronous sockets. It will be multithreaded for different rankings to avoid locks in the future.</li>
+	<li>Connection single threaded with asynchronous sockets. Possibility of use several threads for several handlings.</li>
 </ul>
 
-<p>Every message is formed this way:</p>
+<p>On the binary protocol every message is formed this way:</p>
 <table class="protocol_table request_table">
 	<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
 	<tr><td>+00</td><td>u8</td><td>messageId</td><td>Kind of message to send.</td></tr>
 	<tr><td>+01</td><td>u16</td><td>messageLength</td><td>Length of the message to send.</td></tr>
-	<tr><td>+03</td><td>u8 * messageLength</td><td>messageLength</td><td>Raw data of the message to send.</td></tr>
+	<tr><td>+03</td><td>u8 * messageLength</td><td>messageData</td><td>Raw data of the message to send.</td></tr>
 </table>
+
+<p>This document describes, both, the binary protocol, and the PHP client API.</p>
 
 <h1>TOC</h1>
 <ol>
@@ -78,31 +86,30 @@ The server itself is very fast because:
 			<li>
 				<a href="#api_misc">Misc</a>
 				<ul>
-					<li><a href="#api_Ping">Ping</a></li>
-					<li><a href="#api_GetVersion">GetVersion</a></li>
+					<li><a href="#api_Ping">0x00 - Ping</a></li>
+					<li><a href="#api_GetVersion">0x01 - GetVersion</a></li>
 				</ul>
 			</li>
 			<li>
 				<a href="#api_rankings">Rankings</a>
 				<ul>
-					<li><a href="#api_SetRanking">SetRanking</a></li>
-					<li><a href="#api_GetRankingInfo">GetRankingInfo</a></li>
+					<li><a href="#api_GetRankingIdByName">0x10 - GetRankingIdByName</a></li>
+					<li><a href="#api_GetRankingInfo">0x11 - GetRankingInfo</a></li>
 				</ul>
 			</li>
 			<li>
 				<a href="#api_elements">Elements</a>
 				<ul>
-					<li><a href="#api_SetElements">SetElements</a></li>
-					<li><a href="#api_GetElementOffset">GetElementOffset</a></li>
-					<li><a href="#api_ListElements">ListElements</a></li>
-					<li><a href="#api_RemoveElements">RemoveElements</a></li>
-					<li><a href="#api_RemoveAllElements">RemoveAllElements</a></li>
+					<li><a href="#api_SetElements">0x20 - SetElements</a></li>
+					<li><a href="#api_GetElementOffset">0x21 - GetElementOffset</a></li>
+					<li><a href="#api_ListElements">0x22 - ListElements</a></li>
+					<li><a href="#api_RemoveElements">0x23 - RemoveElements</a></li>
+					<li><a href="#api_RemoveAllElements">0x24 - RemoveAllElements</a></li>
 				</ul>
 			</li>
 		</ol>
 	</li>
 </ol>
-
 
 <a name="api"></a>
 <h1>API</h1>
@@ -111,7 +118,7 @@ The server itself is very fast because:
 <h1>API::Misc</h1>
 
 <a name="api_Ping"></a>
-<h2>Ping()</h2>
+<h2>0x00 - Ping()</h2>
 <div class="section">
 	<p>Simple call to determine the latency between client and server.</p>
 
@@ -130,7 +137,7 @@ The server itself is very fast because:
 </div>
 
 <a name="api_GetVersion"></a>
-<h2>GetVersion()</h2>
+<h2>0x01 - GetVersion()</h2>
 <div class="section">
 	<p>Simple call to get the version of the server.</p>
 
@@ -152,12 +159,29 @@ The server itself is very fast because:
 <a name="api_rankings"></a>
 <h1>API::Rankings</h1>
 
-<a name="api_SetRanking"></a>
-<h2>SetRanking(u32 rankingIndex, s32 direction, s32 maxElements)</h2>
+<a name="api_GetRankingIdByName"></a>
+<h2>0x10 - GetRankingIdByName(stringz_utf8 rankingName)</h2>
 <div class="section">
 	<p>
-		Set the properties of a ranking. If the ranking already exists, it will delete all its items.
-		rankingIndex start at 0 and unused indexes will be allocated anyway.
+		Gets/creates a ranking. If the ranking doesn't exists, it will be created.
+		The features of the index will be determinated by the index name.
+	</p>
+	
+	<p>
+		<h3>Index Name Format:</h3>
+		<h4>Direction (mandatory):</h4>
+		<p>
+			<div>+ Ascendending index</div>
+			<div>- Descending index</div>
+		</p>
+		<h4>Name (mandatory):</h4>
+		<p>
+			<div>Name of the index</div>
+		</p>
+		<h4>Capped count (optional):</h4>
+		<p>
+			<div>: Maximum number of registers</div>
+		</p>
 	</p>
 	
 	<h3>Protocol MessageId</h3>
@@ -166,36 +190,27 @@ The server itself is very fast because:
 	<h3>Protocol Request</h3>
 	<table class="protocol_table request_table">
 		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
-		<tr><td>+00</td><td>u32</td><td>rankingIndex</td><td>Ranking index to delete the elements from.</td></tr>
-		<tr><td>+04</td><td>s32</td><td>direction</td><td>
-			<ul>
-				<li>+1 - Ascending</li>
-				<li>-1 - Descending</li>
-			</ul>
-		</td></tr>
-		<tr><td>+08</td><td>s32</td><td>maxElements</td><td>Maximum number of elements that will contain the list. The special value -1 means that it could contain unlimited elements. When reached it will delete automatically elements that have a possition greater than this value.</td></tr>
+		<tr><td>+00</td><td>stringz utf8</td><td>rankingName</td><td>Ranking name.</td></tr>
 	</table>
 
 	<h3>Protocol Response</h3>
 	<table class="protocol_table response_table">
 		<tr><th>Offset</th><th>Type</th><th>Field</th><th>Description</th></tr>
-		<tr><td>+00</td><td>u32</td><td>result</td><td>
-			<ul>
-				<li>00 - Success</li>
-				<li>01 - Invalid rankingIndex</li>
-			</ul>
-		</td></tr>
-		<tr><td>+04</td><td>u32</td><td>removedCount</td><td>Number of elements removed after the creation. It will be 0 for new indexes.</td></tr>
+		<tr><td>+00</td><td>u32</td><td>Ranking numeric index</td><td></td></tr>
 	</table>
 	
 	<h3>Example</h3>
 <pre class="prettyprint">
-$smrClient->setRanking($rankingIndex = 0, $elementId = 1000);
+// A descending index with 50,000 elements as much.
+$rankingIndex = $smrClient->GetRankingIdByName($rankingName = '-IndexName:50000');
+
+// An ascending index without limits of the number of elements.
+$rankingIndex = $smrClient->GetRankingIdByName($rankingName = '+MyTestIndex123');
 </pre>
 </div>
 
 <a name="api_GetRankingInfo"></a>
-<h2>GetRankingInfo(u32 rankingIndex)</h2>
+<h2>0x11 - GetRankingInfo(u32 rankingIndex)</h2>
 <div class="section">
 	<p>
 		Obtains information related to a ranking;
@@ -249,7 +264,7 @@ printf("treeHeight  : %d\n", $info['treeHeight']);
 <h1>API::Elements</h1>
 
 <a name="api_SetElements"></a>
-<h2>SetElements([u32 rankingIndex, u32 elementId, u32 score, u32 timestamp]...)</h2>
+<h2>0x20 - SetElements([u32 rankingIndex, u32 elementId, u32 score, u32 timestamp]...)</h2>
 <div class="section">
 	<p>
 		Sets the score and timestamp for a set of elements in the specified rankings.
@@ -293,12 +308,15 @@ printf("treeHeight  : %d\n", $info['treeHeight']);
 for ($n = 0; $n < 10; $n++) {
 	$smrClient->setElementBuffered($rankingIndex = 0, $elementId = $n, $score = mt_rand(0, 500), $timestamp = time());
 }
+
+// NOTE: Latest versions performs a flush any time required: When reading information, when the buffer is filled,
+// when the script finalizes or the object lost its references.
 $smrClient->setElementBufferedFlush();
 </pre>
 </div>
 
 <a name="api_GetElementOffset"></a>
-<h2>GetElementOffset(u32 rankingIndex, u32 elementId)</h2>
+<h2>0x21 - GetElementOffset(u32 rankingIndex, u32 elementId)</h2>
 <div class="section">
 	<p>
 		Obtains the offset of an element in a ranking.
@@ -334,7 +352,7 @@ $elementsInPage = $smrClient->listElements($rankingIndex = 0, $offset = ($elemen
 </div>
 
 <a name="api_ListElements"></a>
-<h2>ListElements(u32 rankingIndex, u32 offset, u32 count)</h2>
+<h2>0x22 - ListElements(u32 rankingIndex, u32 offset, u32 count)</h2>
 <div class="section">
 	<p>Obtain a slice of elements from a specified ranking.</p>
 	
@@ -381,7 +399,7 @@ foreach ($list as $element) {
 </div>
 
 <a name="api_RemoveElements"></a>
-<h2>RemoveElements(u32 rankingIndex, u32 elementId)</h2>
+<h2>0x23 - RemoveElements(u32 rankingIndex, u32 elementId)</h2>
 <div class="section">
 	<p>
 		Removes the selected elements from a list of rankingIndex/elementId pairs.
@@ -421,7 +439,7 @@ $smrClient->removeElementFlush();
 </div>
 
 <a name="api_RemoveAllElements"></a>
-<h2>RemoveAllElements(u32 rankingIndex)</h2>
+<h2>0x24 - RemoveAllElements(u32 rankingIndex)</h2>
 <div class="section">
 	<p>
 		Removes all elements from a ranking.
@@ -452,6 +470,9 @@ $smrClient->removeElementFlush();
 <pre class="prettyprint">
 // Removes all elements from the first ranking.
 $smrClient->clearAllElements($rankingIndex = 0);
+
+// Removes all elements from a ranking called '-TestIndex:1000'
+$smrClient->clearAllElements($rankingName = '-TestIndex:1000');
 </pre>
 </div>
 
