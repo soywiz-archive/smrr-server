@@ -136,6 +136,10 @@ class SmrClientBase {
 class SmrClient extends SmrClientBase {
 	protected $bufferSetElements = array();
 	protected $cachedRankingIdsByNames = array();
+	
+	public function __destruct() {
+		$this->cachedRankingIdsByNames = array();
+	}
 
 	public function ping() {
 		return $this->sendPacket(SmrPacketType::Ping);
