@@ -6,6 +6,7 @@ using SimpleMassiveRealtimeRankingServer.Server;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
+#if false
 	[TestClass]
 	public class PacketTest
 	{
@@ -27,4 +28,5 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			);
 		}
 	}
+#endif
 }

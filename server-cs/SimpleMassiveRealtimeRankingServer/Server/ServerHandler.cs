@@ -139,51 +139,21 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
             switch (Type)
             {
-                case PacketType.GetElementOffset:
-                    {
-                        ResponseContent = await HandlePacket_GetElementOffset(RequestContent);
-                    }
-                    break;
-                case PacketType.GetRankingIdByName:
-                    {
-                        ResponseContent = await HandlePacket_GetRankingIdByName(RequestContent);
-                    }
-                    break;
-                case PacketType.GetRankingInfo:
-                    {
-                        ResponseContent = await HandlePacket_GetRankingInfo(RequestContent);
-                    }
-                    break;
-                case PacketType.GetVersion:
-                    {
-                        ResponseContent = await HandlePacket_GetVersion(RequestContent);
-                    }
-                    break;
-                case PacketType.ListElements:
-                    {
-                        ResponseContent = await HandlePacket_ListElements(RequestContent);
-                    }
-                    break;
-                case PacketType.Ping:
-                    {
-                        ResponseContent = await HandlePacket_Ping(RequestContent);
-                    }
-                    break;
-                case PacketType.RemoveAllElements:
-                    {
-                        ResponseContent = await HandlePacket_RemoveAllElements(RequestContent);
-                    }
-                    break;
-                case PacketType.RemoveElements:
-                    {
-                        ResponseContent = await HandlePacket_RemoveElements(RequestContent);
-                    }
-                    break;
-                case PacketType.SetElements:
-                    {
-                        ResponseContent = await HandlePacket_SetElements(RequestContent);
-                    }
-                    break;
+                // Information
+                case PacketType.Ping: ResponseContent = await HandlePacket_Ping(RequestContent); break;
+                case PacketType.GetVersion: ResponseContent = await HandlePacket_GetVersion(RequestContent); break;
+                case PacketType.GetServerInfo: ResponseContent = await HandlePacket_GetServerInfo(RequestContent); break;
+
+                // Rankings
+                case PacketType.GetRankingIdByName: ResponseContent = await HandlePacket_GetRankingIdByName(RequestContent); break;
+                case PacketType.GetRankingInfo: ResponseContent = await HandlePacket_GetRankingInfo(RequestContent); break;
+
+                // Elements
+                case PacketType.SetElements: ResponseContent = await HandlePacket_SetElements(RequestContent); break;
+                case PacketType.GetElementOffset: ResponseContent = await HandlePacket_GetElementOffset(RequestContent); break;
+                case PacketType.ListElements: ResponseContent = await HandlePacket_ListElements(RequestContent); break;
+                case PacketType.RemoveElements: ResponseContent = await HandlePacket_RemoveElements(RequestContent); break;
+                case PacketType.RemoveAllElements: ResponseContent = await HandlePacket_RemoveAllElements(RequestContent); break;
                 default:
                     Console.WriteLine("Can't handle packet '{0}'", Type);
                     throw (new NotImplementedException("Can't handle packet '" + Type + "'"));

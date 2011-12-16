@@ -7,6 +7,7 @@ using System.IO;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
+#if false
 	[TestClass]
 	public class GetRankingIdByNameHandlerTest
 	{
@@ -54,4 +55,5 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			}
 		}
 	}
+#endif
 }

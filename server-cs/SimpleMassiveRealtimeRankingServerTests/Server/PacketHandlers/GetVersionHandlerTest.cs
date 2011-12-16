@@ -7,6 +7,7 @@ using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
+#if false
 	[TestClass]
 	public class GetVersionHandlerTest
 	{
@@ -28,4 +29,5 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			);
 		}
 	}
+#endif
 }

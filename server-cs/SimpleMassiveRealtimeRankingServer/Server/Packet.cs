@@ -59,7 +59,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
 		public override string ToString()
 		{
-			return String.Format("Packet(Type={0}, Data={1})", Type, this.Stream.ToArray().ToHexString());
+            return String.Format("Packet(Type={0}, Data={1})", Type, BitConverter.ToString(this.Stream.ToArray()));
 		}
 	}
 }

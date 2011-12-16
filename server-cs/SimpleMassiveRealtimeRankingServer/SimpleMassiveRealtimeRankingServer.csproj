@@ -48,6 +48,29 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CSharpUtils\Containers\RedBlackTree\RedBlackTreeWithStats.cs" />
+    <Compile Include="CSharpUtils\Containers\RedBlackTree\RedBlackTreeWithStatsNode.cs" />
+    <Compile Include="CSharpUtils\Containers\RedBlackTree\RedBlackTreeWithStatsQueryProvider.cs" />
+    <Compile Include="CSharpUtils\Containers\RedBlackTree\RedBlackTreeWithStatsRange.cs" />
+    <Compile Include="CSharpUtils\Endianness.cs" />
+    <Compile Include="CSharpUtils\Extensions\ArrayExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\BinaryReaderWriterExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\DictionaryExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\IntegerExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\LinqXmlExExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\ListExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\ReaderWriterLockExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\StreamExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\StringExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\StructExtensions.cs" />
+    <Compile Include="CSharpUtils\Extensions\TypeExtensions.cs" />
+    <Compile Include="CSharpUtils\Getopt\Getopt.cs" />
+    <Compile Include="CSharpUtils\LanguageUtils.cs" />
+    <Compile Include="CSharpUtils\MathUtils.cs" />
+    <Compile Include="CSharpUtils\Net\NetworkUtilities.cs" />
+    <Compile Include="CSharpUtils\Net\TcpTestServer.cs" />
+    <Compile Include="CSharpUtils\PointerUtils.cs" />
+    <Compile Include="CSharpUtils\ProduceConsumeBuffer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server\BaseClientHandler.cs" />
@@ -67,16 +90,14 @@
     <Compile Include="Server\ServerIndices.cs" />
     <Compile Include="Server\ServerManager.cs" />
     <Compile Include="Server\StreamAsyncExtensions.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\csharputils\CSharpUtils\CSharpUtils\CSharpUtils.csproj">
-      <Project>{746FADF2-D613-4FFD-8551-2181ADAE3CD1}</Project>
-      <Name>CSharpUtils</Name>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </ProjectReference>
+    <Compile Include="CSharpUtils\Streams\ProxyStream.cs" />
+    <Compile Include="CSharpUtils\Streams\SliceStream.cs" />
+    <Compile Include="CSharpUtils\StructUtils.cs" />
+    <Compile Include="CSharpUtils\Threading\CustomThreadPool.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <Compile Include="Server\ServerHandler.GetServerInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Server\PacketHandlers\" />

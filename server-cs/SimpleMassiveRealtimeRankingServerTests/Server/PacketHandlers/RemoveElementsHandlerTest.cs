@@ -8,6 +8,7 @@ using SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
+#if false
 	[TestClass]
 	public class RemoveElementsHandlerTest
 	{
@@ -51,4 +52,5 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			);
 		}
 	}
+#endif
 }

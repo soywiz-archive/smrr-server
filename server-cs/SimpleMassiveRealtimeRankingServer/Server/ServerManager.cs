@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using CSharpUtils.Threading;
@@ -71,5 +72,49 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 				};
 			}
 		}
-	}
+
+        public struct ServerInfoStruct
+        {
+            /// <summary>
+            /// Number of indexes.
+            /// </summary>
+            public long IndexCount;
+
+            /// <summary>
+            /// Total number of elements on all indexes.
+            /// </summary>
+            public long TotalNumberOfElements;
+
+            /// <summary>
+            /// The memory the server is using at this moment.
+            /// </summary>
+            public long CurrentPrivateMemory;
+
+            /// <summary>
+            /// The memory the server is using at this moment.
+            /// </summary>
+            public long CurrentVirtualMemory;
+
+            /// <summary>
+            /// Maximum memory the server used.
+            /// </summary>
+            public long PeakVirtualMemory;
+        }
+
+        public ServerInfoStruct ServerInfo
+        {
+            get
+            {
+                var CurrentProcess = Process.GetCurrentProcess();
+                return new ServerInfoStruct()
+                {
+                    IndexCount = ServerIndices.IndicesCount,
+                    TotalNumberOfElements = ServerIndices.TotalNumberOfElements,
+                    CurrentPrivateMemory = CurrentProcess.PrivateMemorySize64,
+                    CurrentVirtualMemory = CurrentProcess.VirtualMemorySize64,
+                    PeakVirtualMemory = CurrentProcess.PeakVirtualMemorySize64,
+                };
+            }
+        }
+    }
 }

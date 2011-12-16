@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
-using CSharpUtils.Json;
+//using CSharpUtils.Json;
 using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServerTests
@@ -33,7 +33,7 @@ namespace SimpleMassiveRealtimeRankingServerTests
 				AscendingIndex.UpdateUserScore(UserId: 1, ScoreTimeStamp: 1000, ScoreValue: 100);
 				Assert.AreEqual(
 					"0,1,2",
-					AscendingIndex.GetRange(StartingPosition: 0, Count: 1000).Select(Item => Item.UserId).ToStringArray()
+					String.Join(",", AscendingIndex.GetRange(StartingPosition: 0, Count: 1000).Select(Item => Item.UserId))
 				);
 			}
 
@@ -44,7 +44,7 @@ namespace SimpleMassiveRealtimeRankingServerTests
 				DescendingIndex.UpdateUserScore(UserId: 3, ScoreTimeStamp: 1000, ScoreValue: 200);
 				Assert.AreEqual(
 					"3,2,4",
-					DescendingIndex.GetRange(StartingPosition: 0, Count: 1000).Select(Item => Item.UserId).ToStringArray()
+					String.Join(",", DescendingIndex.GetRange(StartingPosition: 0, Count: 1000).Select(Item => Item.UserId))
 				);
 			}
 
@@ -55,7 +55,7 @@ namespace SimpleMassiveRealtimeRankingServerTests
 				AscendingIndex.UpdateUserScore(UserId: 3, ScoreTimeStamp: 1000, ScoreValue: 200);
 				Assert.AreEqual(
 					"4,2,3",
-					AscendingIndex.GetRange(StartingPosition: 0, Count: 1000).Select(Item => Item.UserId).ToStringArray()
+					String.Join(",", AscendingIndex.GetRange(StartingPosition: 0, Count: 1000).Select(Item => Item.UserId))
 				);
 			}
 
@@ -66,7 +66,7 @@ namespace SimpleMassiveRealtimeRankingServerTests
 				DescendingIndex.UpdateUserScore(UserId: 3, ScoreTimeStamp: 1001, ScoreValue: 100);
 				Assert.AreEqual(
 					"4,2,3",
-					DescendingIndex.GetRange(StartingPosition: 0, Count: 1000).Select(Item => Item.UserId).ToStringArray()
+					String.Join(",", DescendingIndex.GetRange(StartingPosition: 0, Count: 1000).Select(Item => Item.UserId))
 				);
 			}
 		}
@@ -137,7 +137,7 @@ namespace SimpleMassiveRealtimeRankingServerTests
 				CappedIndex.UpdateUserScore(UserId: 4, ScoreTimeStamp: 1000, ScoreValue: 150);
 				Assert.AreEqual(
 					"3,2",
-					CappedIndex.GetRange(0, 1000).Select(Item => Item.UserId).ToStringArray()
+					String.Join(",", CappedIndex.GetRange(0, 1000).Select(Item => Item.UserId))
 				);
 			}
 		}

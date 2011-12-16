@@ -11,6 +11,7 @@ using System.Net.Sockets;
 
 namespace SimpleMassiveRealtimeRankingServerTests.Server
 {
+#if false
 	[TestClass()]
 	public class ClientHandlerTest
 	{
@@ -37,4 +38,5 @@ namespace SimpleMassiveRealtimeRankingServerTests.Server
 			);
 		}
 	}
+#endif
 }

@@ -150,6 +150,27 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		protected List<UserScoreIndex> Indices = new List<UserScoreIndex>();
 		protected Dictionary<string, int> IndiceIdsByName = new Dictionary<string, int>();
 
+        public int IndicesCount
+        {
+            get
+            {
+                return Indices.Count;
+            }
+        }
+
+        public long TotalNumberOfElements
+        {
+            get
+            {
+                long TotalCount = 0;
+                foreach (var Index in Indices.ToArray())
+                {
+                    TotalCount += Index.Tree.Count;
+                }
+                return TotalCount;
+            }
+        }
+
 		public UserScoreIndex this[int IndexId]
 		{
 			get

@@ -7,6 +7,7 @@ using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
+#if false
 	[TestClass]
 	public class RemoveAllElementsHandlerTest
 	{
@@ -37,4 +38,5 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			);
 		}
 	}
+#endif
 }

@@ -2,8 +2,15 @@
 
 require_once(__DIR__ . '/smr-client.php');
 
-$SmrClient = new SmrClient();
-$SmrClient->connect('127.0.0.1', 9777);
+$start = microtime(true);
+for ($n = 0; $n < 1000; $n++) {
+	$SmrClient = new SmrClient();
+	$SmrClient->connect('127.0.0.1', 9777);
+}
+$end = microtime(true);
+printf("%.6f\n", $end - $start);
+exit;
+
 $time = time();
 
 //$SmrClient->removeAllElements(0);
@@ -22,11 +29,18 @@ exit;
 */
 printf("Version: %s\n", $SmrClient->getVersion());
 
+//exit;
+
 $STRESS = true;
 //$STRESS = false;
 
 if ($STRESS) {
+/*
 	$NumberOfIndexes = 100;
+	$NumberOfEntriesPerIndexCapped = 50000;
+	$NumberOfEntriesToAddPerIndex  = 100000;
+	*/
+	$NumberOfIndexes = 500;
 	$NumberOfEntriesPerIndexCapped = 50000;
 	$NumberOfEntriesToAddPerIndex  = 100000;
 } else {

@@ -9,6 +9,7 @@ using SimpleMassiveRealtimeRankingServer.Server;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
+#if false
 	[TestClass()]
 	public class BaseClientHandlerTest
 	{
@@ -45,4 +46,5 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			);
 		}
 	}
+#endif
 }

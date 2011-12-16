@@ -7,6 +7,7 @@ using SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers;
 
 namespace SimpleMassiveRealtimeRankingServerTests
 {
+#if false
 	[TestClass]
 	public class PingHandlerTest
 	{
@@ -28,4 +29,5 @@ namespace SimpleMassiveRealtimeRankingServerTests
 			);
 		}
 	}
+#endif
 }

@@ -53,6 +53,7 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Containers\RedBlackTree\RedBlackTreeWithStatsTest.cs" />
     <Compile Include="Server\PacketHandlers\RemoveAllElementsHandlerTest.cs" />
     <Compile Include="Server\PacketHandlers\Helpers\TestPacketHelper.cs" />
     <Compile Include="Server\PacketHandlers\RemoveElementsHandlerTest.cs" />
@@ -71,10 +72,6 @@
     <Compile Include="Server\PacketHandlers\SetElementsHandlerTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\csharputils\CSharpUtils\CSharpUtils\CSharpUtils.csproj">
-      <Project>{746FADF2-D613-4FFD-8551-2181ADAE3CD1}</Project>
-      <Name>CSharpUtils</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SimpleMassiveRealtimeRankingServer\SimpleMassiveRealtimeRankingServer.csproj">
       <Project>{4D231169-C198-4CDB-ADBD-D39C1115B213}</Project>
       <Name>SimpleMassiveRealtimeRankingServer</Name>

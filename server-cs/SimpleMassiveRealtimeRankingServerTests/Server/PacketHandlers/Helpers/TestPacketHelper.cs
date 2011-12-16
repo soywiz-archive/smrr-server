@@ -16,12 +16,12 @@ namespace SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers
 		public ServerIndices.UserScoreIndex AscendingIndex;
 		public ServerIndices.UserScoreIndex DescendingIndex;
 		//public ServerIndices.UserScoreIndex TestIndex;
-		public Packet.PacketType PacketType;
+		public PacketType PacketType;
 		public Packet ReceivedPacket;
 		public Packet PacketToSend;
 		public BasePacketHandler PacketHandler;
 
-		public TestPacketHelper(Packet.PacketType PacketType, BasePacketHandler PacketHandler)
+		public TestPacketHelper(PacketType PacketType, BasePacketHandler PacketHandler)
 		{
 			this.ServerManager = new ServerManager();
 			this.AscendingIndex = ServerManager.ServerIndices["+AscendingIndex"];
