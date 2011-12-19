@@ -81,6 +81,7 @@
     <Compile Include="Server\ServerHandler.GetElementOffset.cs" />
     <Compile Include="Server\ServerHandler.GetRankingIdByName.cs" />
     <Compile Include="Server\ServerHandler.GetRankingInfo.cs" />
+    <Compile Include="Server\ServerHandler.GetRankingNameById.cs" />
     <Compile Include="Server\ServerHandler.GetVersion.cs" />
     <Compile Include="Server\ServerHandler.ListElements.cs" />
     <Compile Include="Server\ServerHandler.Ping.cs" />
@@ -89,7 +90,7 @@
     <Compile Include="Server\ServerHandler.SetElements.cs" />
     <Compile Include="Server\ServerIndices.cs" />
     <Compile Include="Server\ServerManager.cs" />
-    <Compile Include="Server\StreamAsyncExtensions.cs" />
+    <Compile Include="CSharpUtils\StreamAsync\StreamAsyncExtensions.cs" />
     <Compile Include="CSharpUtils\Streams\ProxyStream.cs" />
     <Compile Include="CSharpUtils\Streams\SliceStream.cs" />
     <Compile Include="CSharpUtils\StructUtils.cs" />
@@ -99,9 +100,7 @@
     <None Include="app.config" />
     <Compile Include="Server\ServerHandler.GetServerInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Server\PacketHandlers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

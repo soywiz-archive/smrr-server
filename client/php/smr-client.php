@@ -6,11 +6,13 @@ class SmrPacketType {
 	////////////////////////////////
 	const Ping               = 0x00;
 	const GetVersion         = 0x01;
+	const GetServerInfo      = 0x02;
 	////////////////////////////////
 	/// Rankings ///////////////////
 	////////////////////////////////
 	const GetRankingIdByName = 0x10;
 	const GetRankingInfo     = 0x11;
+	const GetRankingNameById = 0x12;
 	////////////////////////////////
 	/// Elements ///////////////////
 	////////////////////////////////
@@ -50,7 +52,7 @@ class SmrPacket {
 	}
 }
 
-class SmrClientBase {
+abstract class SmrClientBase {
 	public $f;
 	private $packetsSended = 0;
 	private $packetsSent = 0;
@@ -63,8 +65,11 @@ class SmrClientBase {
 		$this->close();
 	}
 
-	public function connect($ip, $port) {
-		$this->f = fsockopen($ip, $port);
+	public function connect($ip, $port, $timeout = -1) {
+		if ($timeout == -1) {
+			$timeout = ini_get('default_socket_timeout');
+		}
+		$this->f = fsockopen($ip, $port, $errno, $errstr, $timeout);
 		$this->packetsSended = 0;
 		$this->packetsSent = 0;
 		if (!$this->f) throw(new Exception("Can't connect to {$ip}:{$port}"));
@@ -76,6 +81,7 @@ class SmrClientBase {
 	}
 
 	public function _sendPacket($type, $data = '') {
+		if ($this->f == null) throw(new Exception("Must connect before sending any packet."));
 		$data_len = strlen($data);
 		if ($data_len > 65535) throw(new Exception("Packet is too big '" . $data_len . "'"));
 		/*
@@ -97,9 +103,9 @@ class SmrClientBase {
 	public function _recvPacket() {
 		$v = fread($this->f, 3);
 		
+		if (strlen($v) < 3) throw(new Exception("Error receiving a SmrPacket Expected minimum length 3 and obtained " . strlen($v) . '.'));
 		list(,$packetSize) = unpack('v', substr($v, 0, 2));
 		list(,$SmrPacketType) = unpack('c', substr($v, 2, 1));
-		if (strlen($v) < 3) throw(new Exception("Error receiving a SmrPacket"));
 		//echo "[@1:{$packetSize}]";
 		//list(,$SmrPacketType) = unpack('c', fread($this->f, 1));
 		//echo "[@2:{$SmrPacketType}]";
@@ -151,6 +157,29 @@ class SmrClient extends SmrClientBase {
 		return "{$major}.{$minor}.{$revision}.{$patch}";
 	}
 
+	public function getServerInfo() {
+		static $keys = array(
+			'indexCount',
+			'totalNumberOfElements',
+			'currentPrivateMemory',
+			'currentVirtualMemory',
+			'peakVirtualMemory',
+		);
+	
+		$result = $this->sendPacket(SmrPacketType::GetServerInfo);
+		$parts = array_values(unpack('v*', $result->data));
+		$values = array();
+		for ($n = 0; $n < count($parts); $n += 4) {
+			$value = 0;
+			for ($m = 3; $m >= 0; $m--) {
+				$value *= 0x10000;
+				$value += $parts[$n + $m];
+			}
+			$values[] = $value;
+		}
+		return array_combine($keys, $values);
+	}
+
 	public function _getRankingIndexFromName($rankingName) {
 		if (is_int($rankingName)) {
 			return $rankingName;
@@ -159,11 +188,22 @@ class SmrClient extends SmrClientBase {
 		if (!isset($cache)) $cache = $this->getRankingIdByName($rankingName);
 		return $cache;
 	}
+	
+	public function getRankingNameById($rankingId) {
+		$result = $this->sendPacket(SmrPacketType::GetRankingNameById, pack('V', $rankingId));
+		return $result->data;
+	}
 
 	public function getRankingIdByName($rankingName) {
 		$result = $this->sendPacket(SmrPacketType::GetRankingIdByName, "{$rankingName}\0");
 		list(,$indexId) = unpack('V*', $result->data);
 		return $indexId;
+	}
+
+	public function getRankingInfoAndName($rankingName) {
+		$info = $this->getRankingInfo($rankingName);
+		return $info + array('name' => $this->getRankingNameById($info['id']));
+		//return $info;
 	}
 
 	public function getRankingInfo($rankingName) {
@@ -173,7 +213,7 @@ class SmrClient extends SmrClientBase {
 		list(,$info['result'], $info['length'], $info['direction'], $info['topScore'], $info['bottomScore'], $info['maxElements'], $info['treeHeight']) = unpack('V*', $result->data);
 		if ($info['result'] != 0) return null;
 		//if ($info['result'] != 0) throw(new Exception("Error in getRankingInfo"));
-		return $info;
+		return array('id' => $rankingIndex) + $info;
 	}
 
 	public function setElementBuffer($rankingName, $elementId, $score, $timestamp) {

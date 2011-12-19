@@ -19,6 +19,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		////////////////////////////////
 		GetRankingIdByName = 0x10,
 		GetRankingInfo = 0x11,
+        GetRankingNameById = 0x12,
 		////////////////////////////////
 		/// Elements ///////////////////
 		////////////////////////////////

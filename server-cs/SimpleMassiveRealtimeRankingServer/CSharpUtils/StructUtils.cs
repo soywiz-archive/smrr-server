@@ -90,6 +90,8 @@ namespace CSharpUtils
 
         public static byte[] StructArrayToBytes<T>(T[] dataArray) where T : struct
         {
+            if (dataArray.Length == 0) return new byte[0];
+
             int ElementSize = Marshal.SizeOf(dataArray[0]);
             byte[] rawData = new byte[ElementSize * dataArray.Length];
             GCHandle handle = GCHandle.Alloc(rawData, GCHandleType.Pinned);

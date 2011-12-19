@@ -23,6 +23,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		public ManualResetEvent IsAcceptingSocketEvent;
 		public ServerManager ServerManager;
         public TaskFactory[] TaskFactories;
+        protected bool Profile = false;
 
         protected async Task EnqueueTask(uint Seed, Action Action)
         {
@@ -80,12 +81,16 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
 		public async Task HandleClientAsync(TcpClient Client)
 		{
-            await WriteLineAsync("HandleClientAsync");
+            if (Profile)
+            {
+                await WriteLineAsync("HandleClientAsync");
+            }
 			var ClientStream = Client.GetStream();
 
             Exception RethrowException = null;
 
-            var Start = DateTime.Now;
+            DateTime Start;
+            Start = DateTime.Now;
             try
             {
                 while (Client.Connected)
@@ -118,6 +123,9 @@ namespace SimpleMassiveRealtimeRankingServer.Server
                     await HandlePacket(Client, ClientStream, PacketType, PacketBody);
                 }
             }
+            catch (IOException)
+            {
+            }
             catch (Exception Exception)
             {
                 Console.WriteLine(Exception);
@@ -127,7 +135,10 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             //finally
             //{
                 var End = DateTime.Now;
-                await WriteLineAsync("{0}", End - Start);
+                if (Profile)
+                {
+                    await WriteLineAsync("{0}", End - Start);
+                }
             //}
             if (RethrowException != null) throw (RethrowException);
 		}
@@ -147,6 +158,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
                 // Rankings
                 case PacketType.GetRankingIdByName: ResponseContent = await HandlePacket_GetRankingIdByName(RequestContent); break;
                 case PacketType.GetRankingInfo: ResponseContent = await HandlePacket_GetRankingInfo(RequestContent); break;
+                case PacketType.GetRankingNameById: ResponseContent = await HandlePacket_GetRankingNameById(RequestContent); break;
 
                 // Elements
                 case PacketType.SetElements: ResponseContent = await HandlePacket_SetElements(RequestContent); break;

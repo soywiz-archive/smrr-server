@@ -15,7 +15,7 @@ class SimpleMassiveServer {
 		//$this->executable = realpath(__DIR__ . '/../../server-cs/SimpleMassiveRealtimeRankingServer.exe');
 		$this->executable = realpath(__DIR__ . '/../../server-cs/SimpleMassiveRealtimeRankingServer/bin/Debug/SimpleMassiveRealtimeRankingServer.exe');
 		static::$executable_test = "smrr_integration_test.exe";
-		echo "{$this->executable}\n";
+		//echo "{$this->executable}\n";
 	}
 	
 	public function __destructor() {
@@ -33,12 +33,15 @@ class SimpleMassiveServer {
 			array(
 				0 => array('pipe', "r"),  // stdin es una tubería usada por el hijo para lectura
 				1 => array('pipe', "w"),  // stdout es una tubería usada por el hijo para escritura
-				2 => array('pipe', "w"),  // stdout es una tubería usada por el hijo para escritura
+				2 => array('pipe', "w"),  // stderr es una tubería usada por el hijo para escritura
 			),
 			$this->pipes
 		);
 		
-		register_shutdown_function(array(__CLASS__, 'clean'));
+		stream_set_blocking($this->pipes[1], false);
+		stream_set_blocking($this->pipes[2], false);
+		
+		register_shutdown_function(array($this, 'clean_and_flush'));
 	}
 	
 	public function stop() {
@@ -49,9 +52,31 @@ class SimpleMassiveServer {
 			proc_close($this->proc);
 		}
 	}
+	
+	public function clean_and_flush() {
+		//print_r(stream_get_meta_data($this->pipes[1]));
+		//print_r(stream_get_meta_data($this->pipes[2]));
+		static::clean();
+
+		@$stdout_data = fread($this->pipes[1], 10240);
+		@$stderr_data = fread($this->pipes[2], 10240);
+
+		if ($stdout_data || $stderr_data) {
+			if ($stdout_data) {
+				echo "---------------------------------------------------\n";
+				echo "{$stdout_data}\n";
+			}
+			if ($stderr_data) {
+				echo "---------------------------------------------------\n";
+				echo "{$stderr_data}\n";
+			}
+			echo "---------------------------------------------------\n";
+		}
+	}
 
 	static public function clean() {
 		$a = error_get_last(); 
+		
 		//echo "Cleaning up...";
 		@shell_exec("taskkill /F /IM " . basename(static::$executable_test) . " 2> NUL");
 	}
@@ -67,6 +92,9 @@ function assertAreEqual($expected, $actual) {
 	list($file, $line) = array($backrow['file'], $backrow['line']);
 	if ($expected != $actual) {
 		$lines = file($file);
+		print_r($expected);
+		echo " != \n";
+		print_r($actual);
 		throw(new Exception("Assert failed on '{$file}:{$line}' :: " . trim($lines[$line - 1])));
 	}
 }
@@ -81,6 +109,7 @@ $server->start();
 	$index = $client->getRankingIdByName('-testIndex:99');
 	assertAreEqual(
 		array(
+			'id' => 0,
 			'treeHeight' => -1,
 			'maxElements' => -1,
 			'bottomScore' => 0,
@@ -88,8 +117,9 @@ $server->start();
 			'direction' => -1,
 			'length' => 0,
 			'result' => 0,
+			'name' => '-testIndex:99',
 		),
-		$client->getRankingInfo($index)
+		$client->getRankingInfoAndName($index)
 	);
 	$time = 1322747689;
 	$client->setElementBuffer($index, $elementId = 1000, $score = 300, $timestamp = $time);
@@ -110,6 +140,7 @@ $server->start();
 	
 	assertAreEqual(
 		array(
+			'id' => 0,
 			'treeHeight' => -1,
 			'maxElements' => -1,
 			'bottomScore' => 100,
@@ -186,6 +217,7 @@ $server->start();
 	);
 	assertAreEqual(
 		array (
+			'id' => 0,
 			'treeHeight' => -1,
 			'maxElements' => -1,
 			'bottomScore' => 0,
@@ -198,3 +230,4 @@ $server->start();
 	);
 }
 $server->stop();
+echo "Ok\n";

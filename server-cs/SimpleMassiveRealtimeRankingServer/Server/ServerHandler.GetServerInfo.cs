@@ -9,6 +9,16 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 {
 	public partial class ServerHandler
 	{
+        /// <summary>
+        /// Obtains information about the server:
+        /// - IndexCount
+        /// - TotalNumberOfElements
+        /// - CurrentPrivateMemory
+        /// - CurrentVirtualMemory
+        /// - PeakVirtualMemory
+        /// </summary>
+        /// <param name="RequestContent">Content of the request.</param>
+        /// <returns>A ServerManager.ServerInfoStruct as a byte array.</returns>
         protected async Task<byte[]> HandlePacket_GetServerInfo(byte[] RequestContent)
         {
             return StructUtils.StructToBytes(ServerManager.ServerInfo);

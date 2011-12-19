@@ -53,15 +53,17 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
 		public class UserScoreIndex : IComparer<UserScore>
 		{
+            public string IndexName { get; protected set; }
 			public int IndexId;
 			internal SortingDirection SortingDirection = SortingDirection.Invalid;
 			internal Dictionary<uint, UserScore> UserScoresByUserId;
 			internal RedBlackTreeWithStats<UserScore> Tree;
 			public int CappedCount = -1;
 
-			public UserScoreIndex(int IndexId, SortingDirection SortingDirection)
+			public UserScoreIndex(int IndexId, string IndexName, SortingDirection SortingDirection)
 			{
 				this.IndexId = IndexId;
+                this.IndexName = IndexName;
 				this.SortingDirection = SortingDirection;
 				this.Tree = new RedBlackTreeWithStats<UserScore>(this);
 				this.UserScoresByUserId = new Dictionary<uint, UserScore>();
@@ -202,7 +204,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 						}
 
 						if (SortingDirection == SortingDirection.Invalid) throw(new Exception("The index must be called '-IndexName' or '+IndexName' wether is a descending index or ascending index."));
-						var Index = new UserScoreIndex(Indices.Count, SortingDirection);
+                        var Index = new UserScoreIndex(Indices.Count, IndexName, SortingDirection);
 						Index.CappedCount = CappedCount;
 						//Index.Tree.CappedToNumberOfElements = CappedCount;
 						Indices.Add(Index);

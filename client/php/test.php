@@ -2,6 +2,11 @@
 
 require_once(__DIR__ . '/smr-client.php');
 
+$SmrClient = new SmrClient();
+$SmrClient->connect('127.0.0.1', 9777);
+/*
+exit;
+
 $start = microtime(true);
 for ($n = 0; $n < 1000; $n++) {
 	$SmrClient = new SmrClient();
@@ -10,6 +15,7 @@ for ($n = 0; $n < 1000; $n++) {
 $end = microtime(true);
 printf("%.6f\n", $end - $start);
 exit;
+*/
 
 $time = time();
 
@@ -28,6 +34,11 @@ printf("Time: %.4f\n", $end - $start);
 exit;
 */
 printf("Version: %s\n", $SmrClient->getVersion());
+$serverInfo = $SmrClient->getServerInfo();
+for ($n = 0; $n < $serverInfo['indexCount']; $n++) {
+	print_r($SmrClient->getRankingInfoAndName($n));
+}
+print_r($serverInfo);
 
 //exit;
 
