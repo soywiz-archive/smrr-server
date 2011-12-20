@@ -29,7 +29,7 @@ class SimpleMassiveServer {
 		static::clean();
 		
 		@copy($this->executable, static::$executable_test);
-		@copy(dirname($this->executable) . '/CSharpUtils.dll', dirname(static::$executable_test) . '/CSharpUtils.dll');
+		//@copy(dirname($this->executable) . '/CSharpUtils.dll', dirname(static::$executable_test) . '/CSharpUtils.dll');
 		
 		$this->proc = proc_open(
 			static::$executable_test . " -i={$this->ip} -p={$this->port}",
