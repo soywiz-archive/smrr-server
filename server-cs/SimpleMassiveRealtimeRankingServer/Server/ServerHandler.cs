@@ -139,9 +139,9 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
         async protected Task WriteLineAsync(string Text, params object[] Params)
         {
-            await Console.Out.WriteLineAsync(String.Format(Text, Params));
-            await Console.Out.FlushAsync();
-            //Console.WriteLine(Text, Params);
+            //await Console.Out.WriteLineAsync(String.Format(Text, Params));
+            //await Console.Out.FlushAsync();
+            Console.WriteLine(Text, Params);
         }
 
         async public Task HandlePacketAsync(TcpClient Client, Stream ClientStream, PacketType Type, byte[] RequestContent)
