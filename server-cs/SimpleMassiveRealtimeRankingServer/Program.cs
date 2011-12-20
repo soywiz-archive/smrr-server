@@ -27,7 +27,7 @@ namespace SimpleMassiveRealtimeRankingServer
                 string Datetime = "<Unknown>";
                 try
                 {
-                    Datetime = Assembly.GetExecutingAssembly().GetManifestResourceStream("SimpleMassiveRealtimeRankingServer.DATETIME").ReadAllContentsAsString();
+                    Datetime = Assembly.GetExecutingAssembly().GetManifestResourceStream("SimpleMassiveRealtimeRankingServer.DATETIME").ReadAllContentsAsString().Trim();
                 }
                 catch
                 {
@@ -35,7 +35,7 @@ namespace SimpleMassiveRealtimeRankingServer
 
                 try
                 {
-                    Revision = Assembly.GetExecutingAssembly().GetManifestResourceStream("SimpleMassiveRealtimeRankingServer.ORIG_HEAD").ReadAllContentsAsString();
+                    Revision = Assembly.GetExecutingAssembly().GetManifestResourceStream("SimpleMassiveRealtimeRankingServer.ORIG_HEAD").ReadAllContentsAsString().Trim();
                 }
                 catch
                 {
@@ -69,8 +69,9 @@ namespace SimpleMassiveRealtimeRankingServer
 #else
                     Console.WriteLine("Compiled with old .NET 4.0 (no async support).");
 #endif
-                    Console.WriteLine("Compiled git Version: {0} | Build time: {1}", Revision, Datetime);
-                    Console.WriteLine("Lastest version: https://github.com/soywiz/smrr-server");
+                    Console.WriteLine("Compiled git Version: {0}", Revision);
+                    Console.WriteLine("Build time: {0}", Datetime);
+                    Console.WriteLine("Project website: https://github.com/soywiz/smrr-server");
 					Console.WriteLine("");
 					Console.WriteLine("Parameters:");
 					Console.WriteLine("    -i    Sets the binding ip. Example: -i=192.168.1.1");
