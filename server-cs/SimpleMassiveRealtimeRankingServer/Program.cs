@@ -12,6 +12,8 @@ using System.IO;
 using CSharpUtils.Streams;
 using SimpleMassiveRealtimeRankingServer.Server;
 using CSharpUtils.Getopt;
+using System.Reflection;
+using System.Diagnostics;
 
 namespace SimpleMassiveRealtimeRankingServer
 {
@@ -21,7 +23,32 @@ namespace SimpleMassiveRealtimeRankingServer
 		{
 			try
 			{
-				string BindIp = "0.0.0.0";
+                string Revision = "<Unknown>";
+                string Datetime = "<Unknown>";
+                try
+                {
+                    Datetime = Assembly.GetExecutingAssembly().GetManifestResourceStream("SimpleMassiveRealtimeRankingServer.DATETIME").ReadAllContentsAsString();
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    Revision = Assembly.GetExecutingAssembly().GetManifestResourceStream("SimpleMassiveRealtimeRankingServer.ORIG_HEAD").ReadAllContentsAsString();
+                }
+                catch
+                {
+                }
+
+                //FileVersionInfo myFileVersionInfo = FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().GetName().ToString());
+                //Console.WriteLine(myFileVersionInfo);
+                //Console.WriteLine(Datetime);
+
+                //Console.WriteLine(Version.Build);
+
+                
+                string BindIp = "0.0.0.0";
 				int BindPort = 9777;
 				int NumberOfThreads = Environment.ProcessorCount;
 
@@ -37,7 +64,13 @@ namespace SimpleMassiveRealtimeRankingServer
 				Getopt.AddRule(new string[] { "-h", "-?", "--help" }, () =>
 				{
 					Console.WriteLine("Simple Massive Realtime Ranking Server - {0} - Carlos Ballesteros Velasco - 2011-2011", new ServerManager().Version);
-					Console.WriteLine("Lastest version: https://github.com/soywiz/smrr-server");
+#if NET_4_5
+                    Console.WriteLine("Compiled with .NET 4.5 Async support.");
+#else
+                    Console.WriteLine("Compiled with old .NET 4.0 (no async support).");
+#endif
+                    Console.WriteLine("Compiled git Version: {0} | Build time: {1}", Revision, Datetime);
+                    Console.WriteLine("Lastest version: https://github.com/soywiz/smrr-server");
 					Console.WriteLine("");
 					Console.WriteLine("Parameters:");
 					Console.WriteLine("    -i    Sets the binding ip. Example: -i=192.168.1.1");
@@ -62,7 +95,7 @@ namespace SimpleMassiveRealtimeRankingServer
 			}
 			catch (Exception Exception)
 			{
-				Console.WriteLine(Exception);
+				Console.Error.WriteLine(Exception);
 				Environment.Exit(-1);
 			}
 		}

@@ -31,7 +31,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             }
         }
 
-        private async Task<byte[]> HandlePacketAsync_ListElements(byte[] RequestContent)
+        async private Task<byte[]> HandlePacketAsync_ListElements(byte[] RequestContent)
         {
             List<ListElements_ResponseEntryStruct> ResponseEntries = new List<ListElements_ResponseEntryStruct>();
 

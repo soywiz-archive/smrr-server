@@ -1,5 +1,8 @@
 <?php
 
+error_reporting(E_ALL);
+set_time_limit(0);
+
 //proc_open( string $cmd , array $descriptorspec , array &$pipes [, string $cwd [, array $env [, array $other_options ]]] )
 
 class SimpleMassiveServer {

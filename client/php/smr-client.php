@@ -17,7 +17,7 @@ class SmrPacketType {
 	/// Elements ///////////////////
 	////////////////////////////////
 	const SetElements        = 0x20;
-	const GetElementOffset   = 0x21;
+	const GetElement         = 0x21;
 	const ListElements       = 0x22;
 	const RemoveElements     = 0x23;
 	const RemoveAllElements  = 0x24;
@@ -227,17 +227,24 @@ class SmrClient extends SmrClientBase {
 		throw(new Exception("Not implemented"));
 	}
 
-	public function getElementOffset($rankingName, $elementId) {
+	public function getElement($rankingName, $elementId) {
 		$rankingIndex = $this->_getRankingIndexFromName($rankingName);
 		$this->_setElementBufferFlush($rankingIndex);
 
 		$result = $this->sendPacket(
-			SmrPacketType::GetElementOffset,
+			SmrPacketType::GetElement,
 			pack('V*', $rankingIndex, $elementId)
 		);
 		//print_r($result); return $result;
-		list(,$position) = unpack('V', $result->data);
-		return $position;
+		
+		static $keys = array('position', 'userId', 'scoreValue', 'scoreTimeStamp');
+		$values = array_values(unpack('V*', $result->data));
+		return array_combine($keys, $values);
+	}
+
+	public function getElementOffset($rankingName, $elementId) {
+		$result = $this->getElement($rankingName, $elementId);
+		return $result['position'];
 	}
 
 	public function listElements($rankingName, $offset, $count) {

@@ -73,11 +73,12 @@
     <Compile Include="CSharpUtils\Net\TcpTestServer.cs" />
     <Compile Include="CSharpUtils\PointerUtils.cs" />
     <Compile Include="CSharpUtils\ProduceConsumeBuffer.cs" />
+    <EmbeddedResource Include="DATETIME" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server\PacketType.cs" />
     <Compile Include="Server\ServerHandler.cs" />
-    <Compile Include="Server\ServerHandler.GetElementOffset.cs" />
+    <Compile Include="Server\ServerHandler.GetElement.cs" />
     <Compile Include="Server\ServerHandler.GetRankingIdByName.cs" />
     <Compile Include="Server\ServerHandler.GetRankingInfo.cs" />
     <Compile Include="Server\ServerHandler.GetRankingNameById.cs" />
@@ -98,9 +99,14 @@
   <ItemGroup>
     <None Include="app.config" />
     <Compile Include="Server\ServerHandler.GetServerInfo.cs" />
+    <EmbeddedResource Include="ORIG_HEAD" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>echo %25DATE%25 %25TIME%25 &gt; "$(ProjectDir)\DATETIME"
+copy /Y "$(SolutionDir)\..\.git\ORIG_HEAD" "$(ProjectDir)\ORIG_HEAD"</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

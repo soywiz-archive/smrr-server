@@ -163,7 +163,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
                 // Elements
                 case PacketType.SetElements: ResponseContent = await HandlePacketAsync_SetElements(RequestContent); break;
-                case PacketType.GetElementOffset: ResponseContent = await HandlePacketAsync_GetElementOffset(RequestContent); break;
+                case PacketType.GetElement: ResponseContent = await HandlePacketAsync_GetElement(RequestContent); break;
                 case PacketType.ListElements: ResponseContent = await HandlePacketAsync_ListElements(RequestContent); break;
                 case PacketType.RemoveElements: ResponseContent = await HandlePacketAsync_RemoveElements(RequestContent); break;
                 case PacketType.RemoveAllElements: ResponseContent = await HandlePacketAsync_RemoveAllElements(RequestContent); break;

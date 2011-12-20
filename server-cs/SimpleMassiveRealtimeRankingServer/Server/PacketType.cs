@@ -24,7 +24,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 		/// Elements ///////////////////
 		////////////////////////////////
 		SetElements = 0x20,
-		GetElementOffset = 0x21,
+		GetElement = 0x21,
 		ListElements = 0x22,
 		RemoveElements = 0x23,
 		RemoveAllElements = 0x24,
