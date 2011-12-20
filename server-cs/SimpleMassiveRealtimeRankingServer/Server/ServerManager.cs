@@ -66,8 +66,8 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 				return new VersionStruct()
 				{
 					MajorVersion = 0,
-					MinorVersion = 9,
-					RevisionVersion = 99,
+					MinorVersion = 7,
+					RevisionVersion = 0,
 					PatchVersion = 2,
 				};
 			}
@@ -86,17 +86,17 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public long TotalNumberOfElements;
 
             /// <summary>
-            /// The memory the server is using at this moment.
+            /// The private memory the server is using at this moment.
             /// </summary>
             public long CurrentPrivateMemory;
 
             /// <summary>
-            /// The memory the server is using at this moment.
+            /// The virtual memory the server is using at this moment.
             /// </summary>
             public long CurrentVirtualMemory;
 
             /// <summary>
-            /// Maximum memory the server used.
+            /// Maximum virtual memory the server used.
             /// </summary>
             public long PeakVirtualMemory;
         }

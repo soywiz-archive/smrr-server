@@ -14,7 +14,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public int RankingIndex;
         }
 
-        async private Task<byte[]> HandlePacket_GetRankingNameById(byte[] RequestContent)
+        async private Task<byte[]> HandlePacketAsync_GetRankingNameById(byte[] RequestContent)
         {
             var Request = StructUtils.BytesToStruct<GetRankingNameById_RequestStruct>(RequestContent);
             return Encoding.UTF8.GetBytes(ServerManager.ServerIndices[Request.RankingIndex].IndexName);

@@ -9,7 +9,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 {
     public partial class ServerHandler
     {
-        private async Task<byte[]> HandlePacket_GetRankingIdByName(byte[] RequestContent)
+        private async Task<byte[]> HandlePacketAsync_GetRankingIdByName(byte[] RequestContent)
         {
             var RankingName = Encoding.UTF8.GetString(RequestContent, 0, RequestContent.Length - 1);
 		    int RankingIndex = ServerManager.ServerIndices[RankingName].IndexId;

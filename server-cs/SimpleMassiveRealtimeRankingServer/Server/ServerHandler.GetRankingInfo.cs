@@ -25,14 +25,14 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public int TreeHeight;
         }
 
-        async private Task<byte[]> HandlePacket_GetRankingInfo(byte[] RequestContent)
+        async private Task<byte[]> HandlePacketAsync_GetRankingInfo(byte[] RequestContent)
         {
             var Request = StructUtils.BytesToStruct<GetRankingInfo_RequestStruct>(RequestContent);
 
             var Index = ServerManager.ServerIndices[Request.RankingIndex];
             var Response = default(GetRankingInfo_ResponseStruct);
 
-            await EnqueueTask((uint)Request.RankingIndex, () =>
+            await EnqueueTaskAsync((uint)Request.RankingIndex, () =>
             {
                 Response = new GetRankingInfo_ResponseStruct()
                 {

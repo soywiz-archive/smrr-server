@@ -20,13 +20,13 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public uint Count;
         }
 
-        private async Task<byte[]> HandlePacket_RemoveAllElements(byte[] RequestContent)
+        private async Task<byte[]> HandlePacketAsync_RemoveAllElements(byte[] RequestContent)
         {
             var Request = StructUtils.BytesToStruct<RemoveAllElements_RequestStruct>(RequestContent);
 
             uint Count = 0;
             
-            await EnqueueTask((uint)Request.RankingIndexId, () =>
+            await EnqueueTaskAsync((uint)Request.RankingIndexId, () =>
             {
                 var RankingIndex = ServerManager.ServerIndices[Request.RankingIndexId];
                 Count = (uint)RankingIndex.Tree.Count;

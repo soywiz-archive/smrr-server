@@ -20,12 +20,12 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public uint UserId;
         }
 
-        private async Task<byte[]> HandlePacket_RemoveElements(byte[] RequestContent)
+        private async Task<byte[]> HandlePacketAsync_RemoveElements(byte[] RequestContent)
         {
             var RequestContentStream = new MemoryStream(RequestContent);
             var RequestHeader = RequestContentStream.ReadStruct<RequestHeaderStruct>();
 
-            await EnqueueTask((uint)RequestHeader.RankingIndexId, () =>
+            await EnqueueTaskAsync((uint)RequestHeader.RankingIndexId, () =>
             {
                 var RequestEntries = RequestContentStream.ReadStructVectorUntilTheEndOfStream<RequestEntryStruct>();
                 var Index = ServerManager.ServerIndices[RequestHeader.RankingIndexId];

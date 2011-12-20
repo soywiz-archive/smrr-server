@@ -20,12 +20,12 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public int IndexPosition;
         }
 
-        private async Task<byte[]> HandlePacket_GetElementOffset(byte[] RequestContent)
+        private async Task<byte[]> HandlePacketAsync_GetElementOffset(byte[] RequestContent)
         {
             var Request = StructUtils.BytesToStruct<GetElementOffset_RequestStruct>(RequestContent);
             int IndexPosition = -1;
 
-            await EnqueueTask((uint)Request.RankingIndex, () =>
+            await EnqueueTaskAsync((uint)Request.RankingIndex, () =>
             {
                 var Ranking = ServerManager.ServerIndices[Request.RankingIndex];
                 try

@@ -25,16 +25,6 @@ namespace SimpleMassiveRealtimeRankingServer.Server
         public TaskFactory[] TaskFactories;
         protected bool Profile = false;
 
-        protected async Task EnqueueTask(uint Seed, Action Action)
-        {
-            await TaskFactories[Seed % TaskFactories.Length].StartNew(Action);
-        }
-
-        protected async Task<TResult> EnqueueTask<TResult>(uint Seed, Func<TResult> Action)
-        {
-            return await TaskFactories[Seed % TaskFactories.Length].StartNew<TResult>(Action);
-        }
-
 		public ServerHandler(string ListenIp, int ListenPort, int NumberOfThreads = 1)
 		{
 			this.ListenIp = ListenIp;
@@ -47,13 +37,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             for (int n = 0; n < TaskFactories.Length; n++) TaskFactories[n] = new TaskFactory();
 		}
 
-        protected async Task WriteLineAsync(string Text, params object[] Params)
-        {
-            //await Console.Out.WriteLineAsync(String.Format(Text, Params));
-            //await Console.Out.FlushAsync();
-            Console.WriteLine(Text, Params);
-        }
-
+#if NET_4_5
 		public async Task AcceptClientLoopAsync()
 		{
             try
@@ -120,7 +104,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
                     //Console.WriteLine("End Packet: {0}", PacketType);
 
                     // Handle Packet
-                    await HandlePacket(Client, ClientStream, PacketType, PacketBody);
+                    await HandlePacketAsync(Client, ClientStream, PacketType, PacketBody);
                 }
             }
             catch (IOException)
@@ -143,29 +127,46 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             if (RethrowException != null) throw (RethrowException);
 		}
 
-		public async Task HandlePacket(TcpClient Client, Stream ClientStream, PacketType Type, byte[] RequestContent)
-		{
-			//await WriteLineAsync("Handle Packet: {0}, {1}", RequestContent.Length, Type);
+        protected async Task EnqueueTaskAsync(uint Seed, Action Action)
+        {
+            await TaskFactories[Seed % TaskFactories.Length].StartNew(Action);
+        }
+
+        protected async Task<TResult> EnqueueTaskAsync<TResult>(uint Seed, Func<TResult> Action)
+        {
+            return await TaskFactories[Seed % TaskFactories.Length].StartNew<TResult>(Action);
+        }
+
+        async protected Task WriteLineAsync(string Text, params object[] Params)
+        {
+            await Console.Out.WriteLineAsync(String.Format(Text, Params));
+            await Console.Out.FlushAsync();
+            //Console.WriteLine(Text, Params);
+        }
+
+        async public Task HandlePacketAsync(TcpClient Client, Stream ClientStream, PacketType Type, byte[] RequestContent)
+        {
+            //await WriteLineAsync("Handle Packet: {0}, {1}", RequestContent.Length, Type);
             byte[] ResponseContent = new byte[0];
 
             switch (Type)
             {
                 // Information
-                case PacketType.Ping: ResponseContent = await HandlePacket_Ping(RequestContent); break;
-                case PacketType.GetVersion: ResponseContent = await HandlePacket_GetVersion(RequestContent); break;
-                case PacketType.GetServerInfo: ResponseContent = await HandlePacket_GetServerInfo(RequestContent); break;
+                case PacketType.Ping: ResponseContent = await HandlePacketAsync_Ping(RequestContent); break;
+                case PacketType.GetVersion: ResponseContent = await HandlePacketAsync_GetVersion(RequestContent); break;
+                case PacketType.GetServerInfo: ResponseContent = await HandlePacketAsync_GetServerInfo(RequestContent); break;
 
                 // Rankings
-                case PacketType.GetRankingIdByName: ResponseContent = await HandlePacket_GetRankingIdByName(RequestContent); break;
-                case PacketType.GetRankingInfo: ResponseContent = await HandlePacket_GetRankingInfo(RequestContent); break;
-                case PacketType.GetRankingNameById: ResponseContent = await HandlePacket_GetRankingNameById(RequestContent); break;
+                case PacketType.GetRankingIdByName: ResponseContent = await HandlePacketAsync_GetRankingIdByName(RequestContent); break;
+                case PacketType.GetRankingInfo: ResponseContent = await HandlePacketAsync_GetRankingInfo(RequestContent); break;
+                case PacketType.GetRankingNameById: ResponseContent = await HandlePacketAsync_GetRankingNameById(RequestContent); break;
 
                 // Elements
-                case PacketType.SetElements: ResponseContent = await HandlePacket_SetElements(RequestContent); break;
-                case PacketType.GetElementOffset: ResponseContent = await HandlePacket_GetElementOffset(RequestContent); break;
-                case PacketType.ListElements: ResponseContent = await HandlePacket_ListElements(RequestContent); break;
-                case PacketType.RemoveElements: ResponseContent = await HandlePacket_RemoveElements(RequestContent); break;
-                case PacketType.RemoveAllElements: ResponseContent = await HandlePacket_RemoveAllElements(RequestContent); break;
+                case PacketType.SetElements: ResponseContent = await HandlePacketAsync_SetElements(RequestContent); break;
+                case PacketType.GetElementOffset: ResponseContent = await HandlePacketAsync_GetElementOffset(RequestContent); break;
+                case PacketType.ListElements: ResponseContent = await HandlePacketAsync_ListElements(RequestContent); break;
+                case PacketType.RemoveElements: ResponseContent = await HandlePacketAsync_RemoveElements(RequestContent); break;
+                case PacketType.RemoveAllElements: ResponseContent = await HandlePacketAsync_RemoveAllElements(RequestContent); break;
                 default:
                     Console.WriteLine("Can't handle packet '{0}'", Type);
                     throw (new NotImplementedException("Can't handle packet '" + Type + "'"));
@@ -183,6 +184,11 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             await ClientStream.FlushAsync();
 
             //Console.WriteLine("Flushed ResponseHeader");
-		}
+        }
+#else
+        public void AcceptClientLoop()
+        {
+        }
+#endif
 	}
 }

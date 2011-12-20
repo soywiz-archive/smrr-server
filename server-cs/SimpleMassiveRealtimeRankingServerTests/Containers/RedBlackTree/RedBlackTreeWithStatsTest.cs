@@ -34,7 +34,7 @@ namespace CSharpUtilsTests
 			Stats.Add(0);
 		}
 
-		[TestMethod]
+        [TestMethod]
 		public void Test1()
 		{
 			Stats.DebugValidateTree();

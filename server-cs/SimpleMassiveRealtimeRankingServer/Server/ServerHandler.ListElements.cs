@@ -31,13 +31,13 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             }
         }
 
-        private async Task<byte[]> HandlePacket_ListElements(byte[] RequestContent)
+        private async Task<byte[]> HandlePacketAsync_ListElements(byte[] RequestContent)
         {
             List<ListElements_ResponseEntryStruct> ResponseEntries = new List<ListElements_ResponseEntryStruct>();
 
             var Request = StructUtils.BytesToStruct<ListElements_RequestStruct>(RequestContent);
             // http://stackoverflow.com/questions/7032290/what-happens-to-an-awaiting-thread-in-c-sharp-async-ctp
-            await EnqueueTask((uint)Request.RankingIndexId, () =>
+            await EnqueueTaskAsync((uint)Request.RankingIndexId, () =>
             {
                 var RankingIndex = ServerManager.ServerIndices[Request.RankingIndexId];
                 int CurrentEntryOffset = Request.Offset;

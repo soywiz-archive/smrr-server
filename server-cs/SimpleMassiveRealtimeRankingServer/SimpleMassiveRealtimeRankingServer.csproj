@@ -21,7 +21,9 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v4.0' ">NET_4_0</DefineConstants>
+    <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v4.5' ">NET_4_5</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -73,9 +75,6 @@
     <Compile Include="CSharpUtils\ProduceConsumeBuffer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Server\BaseClientHandler.cs" />
-    <Compile Include="Server\Packet.cs" />
-    <Compile Include="Server\BasePacketHandler.cs" />
     <Compile Include="Server\PacketType.cs" />
     <Compile Include="Server\ServerHandler.cs" />
     <Compile Include="Server\ServerHandler.GetElementOffset.cs" />

@@ -54,7 +54,11 @@ namespace SimpleMassiveRealtimeRankingServer
 				Getopt.Process();
 
 				var ServerHandler = new ServerHandler(BindIp, BindPort, NumberOfThreads);
+#if NET_4_5
 				ServerHandler.AcceptClientLoopAsync().Wait();
+#else
+                ServerHandler.AcceptClientLoop();
+#endif
 			}
 			catch (Exception Exception)
 			{
