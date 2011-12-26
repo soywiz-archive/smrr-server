@@ -23,7 +23,8 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public uint ScoreTimeStamp;
         }
 
-        private async Task<byte[]> HandlePacketAsync_SetElements(byte[] RequestContent)
+#if NET_4_5
+        async private Task<byte[]> HandlePacketAsync_SetElements(byte[] RequestContent)
         {
             var RequestContentStream = new MemoryStream(RequestContent);
 
@@ -46,5 +47,29 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
             return new byte[0];
         }
+#else
+		private byte[] HandlePacket_SetElements(byte[] RequestContent)
+		{
+			var RequestContentStream = new MemoryStream(RequestContent);
+
+			var RequestHeader = RequestContentStream.ReadStruct<SetElements_RequestHeaderStruct>();
+			var RequestEntries = RequestContentStream.ReadStructVectorUntilTheEndOfStream<SetElements_RequestEntryStruct>();
+
+			{
+				var Index = ServerManager.ServerIndices[RequestHeader.RankingId];
+
+				foreach (var Request in RequestEntries)
+				{
+					Index.UpdateUserScore(
+						UserId: Request.UserId,
+						ScoreTimeStamp: Request.ScoreTimeStamp,
+						ScoreValue: Request.ScoreValue
+					);
+				}
+			}
+
+			return new byte[0];
+		}
+#endif
     }
 }

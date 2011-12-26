@@ -1,5 +1,4 @@
-﻿using SimpleMassiveRealtimeRankingServer.Server.PacketHandlers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using SimpleMassiveRealtimeRankingServer.Server;
 using System.IO;

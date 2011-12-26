@@ -31,6 +31,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             }
         }
 
+#if NET_4_5
         async private Task<byte[]> HandlePacketAsync_ListElements(byte[] RequestContent)
         {
             List<ListElements_ResponseEntryStruct> ResponseEntries = new List<ListElements_ResponseEntryStruct>();
@@ -60,5 +61,35 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 
             return StructUtils.StructArrayToBytes(ResponseEntries.ToArray());
         }
+#else
+		private byte[] HandlePacket_ListElements(byte[] RequestContent)
+		{
+			List<ListElements_ResponseEntryStruct> ResponseEntries = new List<ListElements_ResponseEntryStruct>();
+
+			var Request = StructUtils.BytesToStruct<ListElements_RequestStruct>(RequestContent);
+			// http://stackoverflow.com/questions/7032290/what-happens-to-an-awaiting-thread-in-c-sharp-async-ctp
+			{
+				var RankingIndex = ServerManager.ServerIndices[Request.RankingIndexId];
+				int CurrentEntryOffset = Request.Offset;
+
+				if (Request.Offset >= 0)
+				{
+					foreach (var UserScore in RankingIndex.GetRange(Request.Offset, Request.Count))
+					{
+						ResponseEntries.Add(new ListElements_ResponseEntryStruct()
+						{
+							Position = CurrentEntryOffset,
+							UserId = UserScore.UserId,
+							ScoreValue = UserScore.ScoreValue,
+							ScoreTimeStamp = UserScore.ScoreTimeStamp,
+						});
+						CurrentEntryOffset++;
+					}
+				}
+			}
+
+			return StructUtils.StructArrayToBytes(ResponseEntries.ToArray());
+		}
+#endif
     }
 }

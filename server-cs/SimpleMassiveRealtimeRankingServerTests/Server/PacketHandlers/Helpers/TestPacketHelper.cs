@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SimpleMassiveRealtimeRankingServer.Server;
-using SimpleMassiveRealtimeRankingServer.Server.PacketHandlers;
 using System.IO;
 using CSharpUtils.Extensions;
 
 namespace SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers
 {
+#if false
 	public class TestPacketHelper
 	{
 		public ServerManager ServerManager;
@@ -47,4 +47,6 @@ namespace SimpleMassiveRealtimeRankingServerTests.Server.PacketHandlers.Helpers
 		}
 		*/
 	}
+#else
+#endif
 }

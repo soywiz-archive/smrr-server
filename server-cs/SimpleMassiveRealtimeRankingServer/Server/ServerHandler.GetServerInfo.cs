@@ -19,9 +19,16 @@ namespace SimpleMassiveRealtimeRankingServer.Server
         /// </summary>
         /// <param name="RequestContent">Content of the request.</param>
         /// <returns>A ServerManager.ServerInfoStruct as a byte array.</returns>
-        protected async Task<byte[]> HandlePacketAsync_GetServerInfo(byte[] RequestContent)
+#if NET_4_5
+        async protected Task<byte[]> HandlePacketAsync_GetServerInfo(byte[] RequestContent)
         {
             return StructUtils.StructToBytes(ServerManager.ServerInfo);
         }
+#else
+		protected byte[] HandlePacket_GetServerInfo(byte[] RequestContent)
+		{
+			return StructUtils.StructToBytes(ServerManager.ServerInfo);
+		}
+#endif
 	}
 }

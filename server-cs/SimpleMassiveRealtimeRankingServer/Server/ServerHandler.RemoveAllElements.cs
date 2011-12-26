@@ -20,7 +20,8 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public uint Count;
         }
 
-        private async Task<byte[]> HandlePacketAsync_RemoveAllElements(byte[] RequestContent)
+#if NET_4_5
+		async private Task<byte[]> HandlePacketAsync_RemoveAllElements(byte[] RequestContent)
         {
             var Request = StructUtils.BytesToStruct<RemoveAllElements_RequestStruct>(RequestContent);
 
@@ -39,5 +40,25 @@ namespace SimpleMassiveRealtimeRankingServer.Server
                 Count = Count,
             });
         }
+#else
+		private byte[] HandlePacket_RemoveAllElements(byte[] RequestContent)
+		{
+			var Request = StructUtils.BytesToStruct<RemoveAllElements_RequestStruct>(RequestContent);
+
+			uint Count = 0;
+
+			{
+				var RankingIndex = ServerManager.ServerIndices[Request.RankingIndexId];
+				Count = (uint)RankingIndex.Tree.Count;
+				RankingIndex.RemoveAllItems();
+			}
+
+			return StructUtils.StructToBytes(new RemoveAllElements_ResponseStruct()
+			{
+				Result = 0,
+				Count = Count,
+			});
+		}
+#endif
     }
 }

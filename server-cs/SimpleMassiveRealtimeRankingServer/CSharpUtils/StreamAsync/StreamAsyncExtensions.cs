@@ -10,6 +10,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 {
 	static public class StreamAsyncExtensions
 	{
+#if NET_4_5
 		static public async Task<int> ReadExactAsync(this Stream Stream, byte[] Buffer, int Offset, int Size)
 		{
 			while (Size > 0)
@@ -29,5 +30,26 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 			var Data = StructUtils.StructToBytes(Value);
 			await Stream.WriteAsync(Data, 0, Data.Length);
 		}
+#else
+		static public int ReadExactAsync(this Stream Stream, byte[] Buffer, int Offset, int Size)
+		{
+			while (Size > 0)
+			{
+				//Console.WriteLine("ReadExactAsync: {0}/{1}", Offset, Size);
+				//Console.WriteLine("aaaaaaa");
+				int Readed = Stream.Read(Buffer, Offset, Size);
+				if (Readed == 0) break;
+				Size -= Readed;
+				Offset += Readed;
+			}
+			return Offset;
+		}
+
+		static public void WriteStructAsync<TType>(this Stream Stream, TType Value) where TType : struct
+		{
+			var Data = StructUtils.StructToBytes(Value);
+			Stream.Write(Data, 0, Data.Length);
+		}
+#endif
 	}
 }

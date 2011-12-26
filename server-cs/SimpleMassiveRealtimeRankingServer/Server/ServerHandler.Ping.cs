@@ -8,9 +8,16 @@ namespace SimpleMassiveRealtimeRankingServer.Server
 {
     public partial class ServerHandler
     {
-        private async Task<byte[]> HandlePacketAsync_Ping(byte[] RequestContent)
+#if NET_4_5
+        async private Task<byte[]> HandlePacketAsync_Ping(byte[] RequestContent)
         {
             return new byte[0];
         }
+#else
+		private byte[] HandlePacket_Ping(byte[] RequestContent)
+		{
+			return new byte[0];
+		}
+#endif
     }
 }

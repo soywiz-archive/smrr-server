@@ -20,7 +20,8 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public uint UserId;
         }
 
-        private async Task<byte[]> HandlePacketAsync_RemoveElements(byte[] RequestContent)
+#if NET_4_5
+        async private Task<byte[]> HandlePacketAsync_RemoveElements(byte[] RequestContent)
         {
             var RequestContentStream = new MemoryStream(RequestContent);
             var RequestHeader = RequestContentStream.ReadStruct<RequestHeaderStruct>();
@@ -37,5 +38,23 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             
             return new byte[0];
         }
+#else
+		private byte[] HandlePacket_RemoveElements(byte[] RequestContent)
+		{
+			var RequestContentStream = new MemoryStream(RequestContent);
+			var RequestHeader = RequestContentStream.ReadStruct<RequestHeaderStruct>();
+
+			{
+				var RequestEntries = RequestContentStream.ReadStructVectorUntilTheEndOfStream<RequestEntryStruct>();
+				var Index = ServerManager.ServerIndices[RequestHeader.RankingIndexId];
+				foreach (var RequestEntry in RequestEntries)
+				{
+					Index.Tree.Remove(Index.GetUserScore(RequestEntry.UserId));
+				}
+			}
+
+			return new byte[0];
+		}
+#endif
     }
 }

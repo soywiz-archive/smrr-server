@@ -14,10 +14,18 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public int RankingIndex;
         }
 
+#if NET_4_5
         async private Task<byte[]> HandlePacketAsync_GetRankingNameById(byte[] RequestContent)
         {
             var Request = StructUtils.BytesToStruct<GetRankingNameById_RequestStruct>(RequestContent);
             return Encoding.UTF8.GetBytes(ServerManager.ServerIndices[Request.RankingIndex].IndexName);
         }
+#else
+		private byte[] HandlePacket_GetRankingNameById(byte[] RequestContent)
+		{
+			var Request = StructUtils.BytesToStruct<GetRankingNameById_RequestStruct>(RequestContent);
+			return Encoding.UTF8.GetBytes(ServerManager.ServerIndices[Request.RankingIndex].IndexName);
+		}
+#endif
     }
 }

@@ -23,6 +23,7 @@ namespace SimpleMassiveRealtimeRankingServer.Server
             public uint ScoreTimeStamp;
         }
 
+#if NET_4_5
         private async Task<byte[]> HandlePacketAsync_GetElement(byte[] RequestContent)
         {
             var Request = StructUtils.BytesToStruct<GetElement_RequestStruct>(RequestContent);
@@ -62,5 +63,43 @@ namespace SimpleMassiveRealtimeRankingServer.Server
                 });
             }
         }
+#else
+		private byte[] HandlePacket_GetElement(byte[] RequestContent)
+		{
+			var Request = StructUtils.BytesToStruct<GetElement_RequestStruct>(RequestContent);
+			int IndexPosition = -1;
+			var UserScore = default(ServerIndices.UserScore);
+
+			var Ranking = ServerManager.ServerIndices[Request.RankingIndex];
+			try
+			{
+				UserScore = Ranking.GetUserScore(Request.UserId);
+				IndexPosition = Ranking.Tree.GetItemPosition(UserScore);
+			}
+			catch
+			{
+			}
+			if (IndexPosition == -1 || UserScore == null)
+			{
+				return StructUtils.StructToBytes(new GetElement_ResponseStruct()
+				{
+					Position = -1,
+					UserId = 0,
+					ScoreValue = 0,
+					ScoreTimeStamp = 0,
+				});
+			}
+			else
+			{
+				return StructUtils.StructToBytes(new GetElement_ResponseStruct()
+				{
+					Position = IndexPosition,
+					UserId = UserScore.UserId,
+					ScoreValue = UserScore.ScoreValue,
+					ScoreTimeStamp = UserScore.ScoreTimeStamp,
+				});
+			}
+		}
+#endif
     }
 }
